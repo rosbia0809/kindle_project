@@ -28,13 +28,14 @@ class KindleApp(tk.Tk):
         container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
-        for F in [HomePage,
-                  SearchBookPage,
-                  '''ReadBookPage,
-                  ReadingPage,
-                  DictionaryPage,
-                  WordTesterPage,'''
-                  ]:
+        for F in [HomePage,]:
+            '''
+            SearchBookPage,
+            ReadBookPage,
+            ReadingPage,
+            DictionaryPage,
+            WordTesterPage,'''
+
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
@@ -64,7 +65,6 @@ class HomePage(tk.Frame):
             page=item[1]
             tk.Button(self, text=text, width=20, height=2,
                       command=lambda p=page: controller.show_frame(p)).pack(pady=8)
-
 
 class SearchBookPage(tk.Frame):
     pass
