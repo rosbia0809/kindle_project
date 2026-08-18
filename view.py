@@ -12,7 +12,7 @@ from dictionary_search import get_word_definitions
 engine = sqlalchemy.create_engine('sqlite:///kindle.db')
 Base.metadata.create_all(engine)
 
-class KindleApp(yk.Tk):
+class KindleApp(tk.Tk):
     '''This is the main window;
     it holds every screen as a stacked frame and swaps the ones that are visible'''
 
@@ -28,18 +28,18 @@ class KindleApp(yk.Tk):
         container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
-        for F in ['HomePage',
-                  'SearchBookPage',
-                  'ReadBookPage',
-                  'ReadingPage',
-                  'DictionaryPage',
-                  'WordTesterPage',
+        for F in [HomePage,
+                  SearchBookPage,
+                  '''ReadBookPage,
+                  ReadingPage,
+                  DictionaryPage,
+                  WordTesterPage,'''
                   ]:
             frame = F(container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
 
-        self.show_frame('HomePage')
+        self.show_frame(HomePage)
 
     def show_frame(self, page_class,**kwargs):
         frame = self.frames[page_class]
@@ -49,24 +49,26 @@ class KindleApp(yk.Tk):
 
 class HomePage(tk.Frame):
     def __init__(self, parent, controller):
-        tk.Frame.__init__(parent, bg="#f2e9dc")
-        (tk.Label(self, text='Kindle App',
-                 font=('Ariel',28),
-                 bg='#f2e9dc').pack(pady=40))
+        super().__init__(parent, bg="#f2e9dc")
+
+        tk.Label(self, text="Kindle", font=("Georgia", 28), bg="#f2e9dc").pack(pady=40)
 
         buttons = [
-            ('Search Books', 'SearchBookPage'),
-            ('Read Books', 'ReadBookPage'),
-            ('Dictionary', 'DictionaryPage'),
-            ('Word Tester', 'WordTesterPage'),
+            ["Search Books", SearchBookPage],
+            '''("Read a Book", ReadBookPage),
+            ("Dictionary", DictionaryPage),
+            ("Word Tester", WordTesterPage),'''
         ]
+        for item in buttons:
+            text = item[0]
+            page=item[1]
+            tk.Button(self, text=text, width=20, height=2,
+                      command=lambda p=page: controller.show_frame(p)).pack(pady=8)
 
-        for text,page in buttons:
-            tk.Button(self,
-                      text=text,
-                      width=20,
-                      height=2,
-                      command=lambda p=page: controller.show_frame(p)).pack(pady=10)
 
 class SearchBookPage(tk.Frame):
     pass
+
+if __name__ == "__main__":
+    app = KindleApp()
+    app.mainloop()
