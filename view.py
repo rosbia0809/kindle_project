@@ -60,16 +60,16 @@ class HomePage(tk.Frame):
 
         buttons = [
             ["Search Books", SearchBookPage],
-            ("Read a Book", ReadBookPage),
+            ["Read a Book", ReadBookPage],
             '''
-            ("Dictionary", DictionaryPage),
-            ("Word Tester", WordTesterPage),'''
+            ["Dictionary", DictionaryPage],
+            ["Word Tester", WordTesterPage],'''
         ]
-        for item in buttons:
-            t = item[0]
-            page=item[1]
+        for b in range (len(buttons)):
+            t = buttons[b][0]
+            page=buttons[b][1]
             tk.Button(self, text=str(t), width=20, height=2,
-                      command=lambda p=page: controller.show_frame(p)).pack(pady=8)
+                      command=lambda p=page: controller.show_frame(p)).pack(pady=8,padx=50)
 
 class SearchBookPage(tk.Frame):
     def __init__(self, parent, controller):
