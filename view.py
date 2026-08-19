@@ -174,7 +174,7 @@ class ReadBookPage(tk.Frame):
         for book in books:
             tk.Button(
                 self.list_frame,
-                text=f"{books.book_title}, {book.book_author}",
+                text=f"{book.book_title}, {book.book_author}",
                 width=50,
                 command=lambda b_id=book.book_id: self.controller.show_frame(ReadBookPage, book_id=b_id)
             ).pack(pady=5)

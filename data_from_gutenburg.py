@@ -20,6 +20,7 @@ def get_gutenberg_details(search):
     t_results = results.find_all('span', {'class':'title'})[1]
     a_results = results.find_all('span', {'class':'subtitle'})[1]
     scr = fuzz.ratio(search, t_results.text)
+    print (scr)
     if scr < 60:
         return None
 
@@ -52,7 +53,7 @@ def get_book(g_id):
     text = clean_book.decode('utf-8')
     return text
 
-'''
-s = get_gutenberg_details('alice in wonderland')
+
+s = get_gutenberg_details('scarlet letter')
 print(s[2])
-print(get_book(s[2]))'''
+print(get_book(s[2]))
