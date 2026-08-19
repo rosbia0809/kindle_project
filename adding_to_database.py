@@ -1,6 +1,7 @@
 import sqlalchemy
+from Scripts.activate_this import existing_pkg_config_path
 from sqlalchemy import orm
-from kindle_database import Base, Books, Word, Bookmark
+from kindle_database import Base, Books, Word, Bookmark, Lookup
 from data_from_gutenburg import get_book, get_gutenberg_details
 from dictionary_search import get_word_definitions
 from datetime import datetime
@@ -42,31 +43,39 @@ def store_book(name: str):
         print(f'{name} added to database')
 
 
-def store_word(u_w: str):
+def store_word(u_w: str, book_id: int):
     try:
         u_def = get_word_definitions(u_w)
+        print(u_def)
 
-        try:
-            now = datetime.now()
+    except NoDefinition:
+        print('No definition found')
+        return None
 
-            for defi in u_def:
-                with orm.Session(engine) as session:
-                    w = Word(
-                        word=str(u_w),
-                        meaning=str(defi),
-                        lookups=[],
-                    )
+    with orm.Session(engine) as session:
+        for defi in u_def:
+            exists = session.query(Word).filter_by(word=str(u_w), meaning=defi).first()
+
+            if exists:
+                w = exists
+            else:
+                w = Word(
+                    word=str(u_w),
+                    meaning=str(defi),
+                    lookups=[],
+                )
                 session.add(w)
                 session.commit()
 
-                print(f'{u_w} word added to database')
+            lookup = Lookup(
+                word_id=w.word_id,
+                book_id=book_id,
+                time_stamp=datetime.now(),
+            )
+            session.add(lookup)
 
-        except CurrentTimeError:
-            print('Error getting current date/time')
-    except NoDefinition:
-        print('No definition found')
-
-        # FINISH THIS
+        session.commit()
+    return u_def
 
 def get_latest_bookmark(book_id: int):
     with orm.Session(engine) as session:
@@ -90,5 +99,7 @@ def add_bookmark(book_id: int, position: float):
         )
         session.add(bookmark)
         session.commit()
+
+print(store_word('hello',11))
 
 # Make more for the validation i.e. if get ids returns none do something about that

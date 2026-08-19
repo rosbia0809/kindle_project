@@ -9,15 +9,28 @@ import random
 from kindle_database import Base, Books, Word, Lookup
 from data_from_gutenburg import get_book, get_gutenberg_details
 from dictionary_search import get_word_definitions
-from adding_to_database import get_latest_bookmark, add_bookmark
+from adding_to_database import get_latest_bookmark, add_bookmark, store_word
 
-BG_COLOUR = '#f2e9dc'
-HOME_COLOUR = 'brown'
-FONT = 'Ariel'
 HEADER_SIZE = 20
+HOME_COLOUR = 'brown'
+bg_colour= '#f2e9dc'
+font = 'Ariel'
 
 engine = sqlalchemy.create_engine('sqlite:///kindle.db')
 Base.metadata.create_all(engine)
+
+class HomeButton(tk.Button):
+    '''A home page button that will appear on all pages'''
+    def __init__(self, parent, controller,**kwargs):
+        super().__init__(
+            parent,
+            text='Home',
+            fg=HOME_COLOUR,
+            bg='white',
+            font=font,
+            command=lambda: controller.show_frame(HomePage),
+            **kwargs
+        )
 
 class KindleApp(tk.Tk):
     """This is the main window;
@@ -27,7 +40,7 @@ class KindleApp(tk.Tk):
         super().__init__()
         self.title("Kindle App")
         self.geometry("800x600")
-        self.configure(bg=BG_COLOUR)
+        self.configure(bg=bg_colour)
 
         container = tk.Frame(self)
         container.pack(fill="both", expand=True)
@@ -35,9 +48,8 @@ class KindleApp(tk.Tk):
         container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
-        for F in [HomePage,SearchBookPage,ReadBookPage,ReadingPage,]:
+        for F in [HomePage,SearchBookPage,ReadBookPage,ReadingPage,DictionaryPage,]:
             '''
-            DictionaryPage,
             WordTesterPage,'''
 
             frame = F(container, self)
@@ -54,15 +66,15 @@ class KindleApp(tk.Tk):
 
 class HomePage(tk.Frame):
     def __init__(self, parent, controller):
-        super().__init__(parent, bg=BG_COLOUR)
+        super().__init__(parent, bg=bg_colour)
 
-        tk.Label(self, text="Kindle", font=(FONT, 28), bg=BG_COLOUR).pack(pady=40)
+        tk.Label(self, text="Kindle", font=(font, 28), bg=bg_colour).pack(pady=40)
 
         buttons = [
             ["Search Books", SearchBookPage],
             ["Read a Book", ReadBookPage],
-            '''
             ["Dictionary", DictionaryPage],
+            '''
             ["Word Tester", WordTesterPage],'''
         ]
         for b in range (len(buttons)):
@@ -73,27 +85,21 @@ class HomePage(tk.Frame):
 
 class SearchBookPage(tk.Frame):
     def __init__(self, parent, controller):
-        super().__init__(parent, bg=BG_COLOUR)
+        super().__init__(parent, bg=bg_colour)
         self.controller = controller
 
-        tk.Label(self,text='Search Books', font=(FONT,HEADER_SIZE), bg=BG_COLOUR).pack(pady=20)
+        tk.Label(self, text='Search Books', font=(font, HEADER_SIZE), bg=bg_colour).pack(pady=20)
 
         self.entry = tk.Entry(self,width=40)
         self.entry.pack(pady=20)
 
         # this label will show whether the book has been found in Gutenberg Project or not
-        self.status_label = tk.Label(self,text='',bg=BG_COLOUR,font=FONT)
+        self.status_label = tk.Label(self, text='', bg=bg_colour, font=font)
         self.status_label.pack(pady=20)
 
         tk.Button(self, text="Search Books", command=self.search_book).pack(pady=5)
-        tk.Button(
-            self,
-            text="Home",
-            fg=HOME_COLOUR,
-            bg='white',
-            font=FONT,
-            command=lambda: controller.show_frame(HomePage)
-        ).place(x=20,y=20)
+
+        HomeButton(self,controller).place(x=20,y=20)
 
     def search_book(self):
         name = self.entry.get().strip()
@@ -102,7 +108,7 @@ class SearchBookPage(tk.Frame):
             self.status_label.config(text="Please enter a book name")
             return
 
-        self.status_label.config(text='Searching...', fg='black',font=FONT)
+        self.status_label.config(text='Searching...', fg='black', font=font)
         self.update_idletasks()
 
         #make this into its own subroutine!!!
@@ -110,7 +116,7 @@ class SearchBookPage(tk.Frame):
         result = get_gutenberg_details(name)
 
         if result is None:
-            self.status_label.config(text=f"Book for {name} not found", fg='red',font=FONT)
+            self.status_label.config(text=f"Book for {name} not found", fg='red', font=font)
             return
 
         g_title = result[0]
@@ -121,13 +127,13 @@ class SearchBookPage(tk.Frame):
         with orm.Session(engine) as session:
             exists = session.get(Books,str(g_id))
         if exists:
-            self.status_label.config(text=f"Book for {g_title} already downloaded", fg='black',font=FONT)
+            self.status_label.config(text=f"Book for {g_title} already downloaded", fg='black', font=font)
             return
 
         try:
             book_text = get_book(g_id)
         except Exception:
-            self.status_label.config(text=f"{g_title} could not be downloaded", fg='red',font=FONT)
+            self.status_label.config(text=f"{g_title} could not be downloaded", fg='red', font=font)
             return
 
         #adding to database
@@ -141,26 +147,19 @@ class SearchBookPage(tk.Frame):
             session.add(book)
             session.commit()
 
-        self.status_label.config(text=f"Book for {g_title} downloaded", fg='green',font=FONT)
+        self.status_label.config(text=f"Book for {g_title} downloaded", fg='green', font=font)
 
 class ReadBookPage(tk.Frame):
     def __init__(self, parent, controller):
-        super().__init__(parent, bg=BG_COLOUR)
+        super().__init__(parent, bg=bg_colour)
         self.controller = controller
 
-        tk.Label(self, text="Your Books:", font=(FONT,HEADER_SIZE), bg=BG_COLOUR).pack(pady=20)
+        tk.Label(self, text="Your Books:", font=(font, HEADER_SIZE), bg=bg_colour).pack(pady=20)
 
-        self.list_frame = tk.Frame(self, bg=BG_COLOUR)
+        self.list_frame = tk.Frame(self, bg=bg_colour)
         self.list_frame.pack(pady=10,fill='both',expand=True)
 
-        tk.Button(
-            self,
-            text="Home",
-            fg=HOME_COLOUR,
-            bg='white',
-            font=FONT,
-            command=lambda: controller.show_frame(HomePage)
-        ).place(x=20, y=20)
+        HomeButton(self,self.list_frame).place(x=20,y=20)
 
     def on_show(self):
         for widget in self.list_frame.winfo_children():
@@ -171,7 +170,7 @@ class ReadBookPage(tk.Frame):
             books = session.query(Books).all()
 
         if not books:
-            tk.Label(self.list_frame, text='No books downloaded...', font=FONT, bg=BG_COLOUR).pack(pady=20)
+            tk.Label(self.list_frame, text='No books downloaded...', font=font, bg=bg_colour).pack(pady=20)
             return
 
         for book in books:
@@ -184,24 +183,17 @@ class ReadBookPage(tk.Frame):
 
 class ReadingPage(tk.Frame):
     def __init__(self, parent, controller):
-        super().__init__(parent, bg=BG_COLOUR)
+        super().__init__(parent, bg=bg_colour)
         self.controller = controller
         self.current_book_id = None
 
-        top_bar = tk.Frame(self, bg=BG_COLOUR)
+        top_bar = tk.Frame(self, bg=bg_colour)
         top_bar.pack(fill='x')
 
-        self.title_label = tk.Label(top_bar, text='', font=(FONT,16), bg=BG_COLOUR)
+        self.title_label = tk.Label(top_bar, text='', font=(font, HEADER_SIZE), bg=bg_colour)
         self.title_label.place(x=200, y=20)
 
-        tk.Button(
-            self,
-            text="Home",
-            fg=HOME_COLOUR,
-            bg='white',
-            font=FONT,
-            command=lambda: controller.show_frame(HomePage)
-        ).place(x=20, y=20)
+        HomeButton(self,top_bar).place(x=20,y=20)
 
         tk.Button(
             top_bar,
@@ -219,9 +211,9 @@ class ReadingPage(tk.Frame):
             text_frame,
             wrap='word',
             yscrollcommand=scrollbar.set,
-            bg=BG_COLOUR,
+            bg=bg_colour,
             relief='sunken',
-            font=FONT,
+            font=font,
         )
         self.text_widget.pack(side='left',fill='both',expand=True,padx=10,pady=10)
         scrollbar.config(command=self.text_widget.yview)
@@ -261,3 +253,63 @@ class ReadingPage(tk.Frame):
         if not word:
             return
         self.controller.show_frame(DictionaryPage, word=word, book_id=self.current_book_id)
+
+class DictionaryPage(tk.Frame):
+    def __init__(self, parent, controller):
+        super().__init__(parent, bg=bg_colour)
+        self.controller = controller
+        self.current_book_id = None
+
+        tk.Label(self, text='Dictionary',font=(font, HEADER_SIZE), bg=bg_colour).pack(pady=20)
+
+        self.entry = tk.Entry(self, width=30)
+        self.entry.pack(pady=10)
+
+        tk.Button(
+            self,
+            text='Search',
+            command=self.search_word,
+        ).pack(pady=5)
+
+        self.result_frame = tk.Frame(self, bg=bg_colour)
+        self.result_frame.pack(pady=10,fill='both',expand=True, padx=10,)
+
+        scrollbar = tk.Scrollbar(self.result_frame)
+        scrollbar.pack(side='right',fill='y')
+
+        self.result_text = tk.Text(
+            self.result_frame,
+            wrap='word',
+            yscrollcommand=scrollbar.set,
+            bg=bg_colour,
+            relief='sunken',
+        )
+        self.result_text.pack(side='left',fill='both',expand=True,padx=10,pady=10)
+        scrollbar.config(command=self.result_text.yview)
+
+        HomeButton(self,self.result_frame).place(x=20,y=20)
+
+    def on_show(self, book_id=None, word=None):
+        self.current_book_id = book_id
+        if word:
+            self.entry.delete(0, tk.END)
+            self.entry.insert(0, word)
+            self.search_word()
+
+    def search_word(self):
+        self.result_text.delete('1.0',tk.END)
+
+        word = self.entry.get().strip().lower()
+
+        if not word:
+            return
+
+        definitions = get_word_definitions(word)
+
+
+        if not definitions:
+            self.result_text.insert('1.0',f'No definition for {word} found')
+            return
+
+        for i in range(len(definitions)):
+            self.result_text.insert('end',f'{i} - {definitions[i]}\n')

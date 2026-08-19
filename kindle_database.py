@@ -28,7 +28,7 @@ class Lookup(Base):
         init=False,
         autoincrement=True,
     )
-    word_id: orm.Mapped[str] = orm.mapped_column(
+    word_id: orm.Mapped[int] = orm.mapped_column(
         sqlalchemy.ForeignKey('WORDS.word_id'),
     )
     book_id: orm.Mapped[int] = orm.mapped_column(
