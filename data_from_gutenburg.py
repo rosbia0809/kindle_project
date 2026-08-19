@@ -52,8 +52,3 @@ def get_book(g_id):
     # decodes the bytes to a string
     text = clean_book.decode('utf-8')
     return text
-
-
-s = get_gutenberg_details('scarlet letter')
-print(s[2])
-print(get_book(s[2]))

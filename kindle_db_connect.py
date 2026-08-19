@@ -21,5 +21,3 @@ with Session(engine) as session:
     recent_words = (session.query(Word).join(Lookup).filter(Lookup.time_stamp > thirty_days_ago).distinct().all())
 
     word_list = [w.word for w in recent_words]
-
-print(word_list)

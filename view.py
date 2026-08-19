@@ -2,12 +2,14 @@ import tkinter as tk
 from tkinter import messagebox
 import sqlalchemy
 from sqlalchemy import orm
+import string
 from datetime import datetime, timedelta
 import random
 
 from kindle_database import Base, Books, Word, Lookup
 from data_from_gutenburg import get_book, get_gutenberg_details
 from dictionary_search import get_word_definitions
+from adding_to_database import get_latest_bookmark, add_bookmark
 
 BG_COLOUR = '#f2e9dc'
 HOME_COLOUR = 'brown'
@@ -33,9 +35,8 @@ class KindleApp(tk.Tk):
         container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
-        for F in [HomePage,SearchBookPage,ReadBookPage,]:
+        for F in [HomePage,SearchBookPage,ReadBookPage,ReadingPage,]:
             '''
-            ReadingPage,
             DictionaryPage,
             WordTesterPage,'''
 
@@ -67,7 +68,7 @@ class HomePage(tk.Frame):
         for item in buttons:
             t = item[0]
             page=item[1]
-            tk.Button(self, text=t, width=20, height=2,
+            tk.Button(self, text=str(t), width=20, height=2,
                       command=lambda p=page: controller.show_frame(p)).pack(pady=8)
 
 class SearchBookPage(tk.Frame):
@@ -176,8 +177,89 @@ class ReadBookPage(tk.Frame):
                 self.list_frame,
                 text=f"{book.book_title}, {book.book_author}",
                 width=50,
-                command=lambda b_id=book.book_id: self.controller.show_frame(ReadBookPage, book_id=b_id)
+                command=lambda b_id=book.book_id: self.controller.show_frame(ReadingPage, book_id=b_id)
             ).pack(pady=5)
+
+class ReadingPage(tk.Frame):
+    def __init__(self, parent, controller):
+        super().__init__(parent, bg=BG_COLOUR)
+        self.controller = controller
+        self.current_book_id = None
+
+        top_bar = tk.Frame(self, bg=BG_COLOUR)
+        top_bar.pack(fill='x')
+
+        self.title_label = tk.Label(top_bar, text='', font=(FONT,16), bg=BG_COLOUR)
+        self.title_label.place(x=200, y=20)
+
+        tk.Button(
+            self,
+            text="Home",
+            fg=HOME_COLOUR,
+            bg='white',
+            font=FONT,
+            command=lambda: controller.show_frame(HomePage)
+        ).place(x=20, y=20)
+
+        tk.Button(
+            top_bar,
+            text='Bookmark Here',
+            command=self.add_new_bookmark
+        ).pack(side='right', padx=10, pady=10)
+
+        text_frame = tk.Frame(self)
+        text_frame.pack(fill='both',expand=True,padx=10,pady=30)
+
+        scrollbar = tk.Scrollbar(text_frame)
+        scrollbar.pack(side='right',fill='y')
+
+        self.text_widget = tk.Text(
+            text_frame,
+            wrap='word',
+            yscrollcommand=scrollbar.set,
+            bg=BG_COLOUR,
+            relief='sunken',
+            font=FONT,
+        )
+        self.text_widget.pack(side='left',fill='both',expand=True,padx=10,pady=10)
+        scrollbar.config(command=self.text_widget.yview)
+
+        #double-click a word to look it up
+        self.text_widget.bind("<Double-Button-1>",self.look_up_selected_word)
+
+    def on_show(self, book_id=None):
+        if book_id is None:
+            return
+        self.current_book_id = book_id
+
+        with orm.Session(engine) as session:
+            book=session.get(Books, book_id)
+
+        self.title_label.config(text=f'{book.book_title}')
+        self.text_widget.delete(1.0, tk.END)
+        self.text_widget.insert(1.0,f'{book.book_text}')
+
+        last_bookmark = get_latest_bookmark(book_id)
+        if last_bookmark:
+            self.text_widget.update_idletasks()
+            self.text_widget.yview_moveto(last_bookmark)
+
+    def add_new_bookmark(self):
+        position = self.text_widget.yview()[0]
+        add_bookmark(self.current_book_id, position)
+        messagebox.showinfo('Bookmarked','Your place has been saved')
+
+    def look_up_selected_word(self,event):
+        try:
+            not_clean = self.text_widget.get('insert wordstart', 'insert wordend')
+            word = ''.join([char for char in not_clean if char not in string.punctuation])
+        except tk.TclError:
+            return
+
+        if not word:
+            return
+        self.controller.show_frame(DictionaryPage, word=word, book_id=self.current_book_id)
+
 
 if __name__ == "__main__":
     app = KindleApp()

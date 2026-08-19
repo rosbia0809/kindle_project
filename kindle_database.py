@@ -56,6 +56,6 @@ class Books(Base):
 class Bookmark(Base):
     __tablename__ = 'BOOKMARKS'
     bookmark_id: orm.Mapped[int] = orm.mapped_column(primary_key=True, init=False, autoincrement=True)
-    book_id: orm.Mapped[str] = orm.mapped_column(sqlalchemy.ForeignKey('BOOKS.book_id'))
+    book_id: orm.Mapped[int] = orm.mapped_column(sqlalchemy.ForeignKey('BOOKS.book_id'))
     position: orm.Mapped[float] = orm.mapped_column()
     time_stamp: orm.Mapped[datetime.datetime] = orm.mapped_column(default_factory=datetime.datetime.now)

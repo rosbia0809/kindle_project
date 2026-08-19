@@ -25,5 +25,3 @@ def get_word_definitions(search):
                     definitions.append(first_atr['definition'])
 
     return definitions
-
-print(get_word_definitions('hello'))

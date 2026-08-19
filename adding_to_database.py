@@ -1,6 +1,6 @@
 import sqlalchemy
 from sqlalchemy import orm
-from kindle_database import Base, Books, Word
+from kindle_database import Base, Books, Word, Bookmark
 from data_from_gutenburg import get_book, get_gutenberg_details
 from dictionary_search import get_word_definitions
 from datetime import datetime
@@ -68,9 +68,27 @@ def store_word(u_w: str):
 
         # FINISH THIS
 
+def get_latest_bookmark(book_id: int):
+    with orm.Session(engine) as session:
+        bookmark = (
+            session.query(Bookmark)
+            .filter_by(book_id=str(book_id))
+            .order_by(Bookmark.time_stamp.desc())
+            .first()
+        )
 
-if __name__ == '__main__':
-    name = input('Enter book name: ')
-    (store_word(name))
+        if bookmark:
+            return bookmark.position
+        else:
+            return None
+
+def add_bookmark(book_id: int, position: float):
+    with orm.Session(engine) as session:
+        bookmark = Bookmark(
+            book_id=book_id,
+            position=position,
+        )
+        session.add(bookmark)
+        session.commit()
 
 # Make more for the validation i.e. if get ids returns none do something about that
