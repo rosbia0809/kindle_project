@@ -105,6 +105,7 @@ class SearchBookPage(tk.Frame):
         self.status_label.config(text='Searching...', fg='black',font=FONT)
         self.update_idletasks()
 
+        #make this into its own subroutine!!!
         #calling get_gutenberg_details()
         result = get_gutenberg_details(name)
 
@@ -165,6 +166,7 @@ class ReadBookPage(tk.Frame):
         for widget in self.list_frame.winfo_children():
             widget.destroy()
 
+        #make into its own subroutine!!!
         with orm.Session(engine) as session:
             books = session.query(Books).all()
 
@@ -259,8 +261,3 @@ class ReadingPage(tk.Frame):
         if not word:
             return
         self.controller.show_frame(DictionaryPage, word=word, book_id=self.current_book_id)
-
-
-if __name__ == "__main__":
-    app = KindleApp()
-    app.mainloop()
