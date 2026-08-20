@@ -3,13 +3,8 @@ from Scripts.activate_this import existing_pkg_config_path
 from sqlalchemy import orm
 from kindle_database import Base, Books, Word, Bookmark, Lookup
 from data_from_gutenburg import get_book, get_gutenberg_details
-from dictionary_search import get_word_definitions
+from dictionary_search import get_word_definitions, NoDefinition
 from datetime import datetime
-
-
-class NoDefinition(Exception):
-    pass
-
 
 class CurrentTimeError(Exception):
     pass
@@ -99,7 +94,4 @@ def add_bookmark(book_id: int, position: float):
         )
         session.add(bookmark)
         session.commit()
-
-print(store_word('hello',11))
-
 # Make more for the validation i.e. if get ids returns none do something about that

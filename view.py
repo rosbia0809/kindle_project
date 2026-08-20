@@ -8,7 +8,7 @@ import random
 
 from kindle_database import Base, Books, Word, Lookup
 from data_from_gutenburg import get_book, get_gutenberg_details
-from dictionary_search import get_word_definitions
+from dictionary_search import get_word_definitions, NoDefinition
 from adding_to_database import get_latest_bookmark, add_bookmark, store_word
 
 HEADER_SIZE = 20
@@ -268,7 +268,7 @@ class DictionaryPage(tk.Frame):
 
         tk.Label(self, text='Dictionary',font=(font, HEADER_SIZE), bg=bg_colour).pack(pady=20)
 
-        self.entry = tk.Entry(self, width=30)
+        self.entry = tk.Entry(self, width=50)
         self.entry.pack(pady=10)
 
         tk.Button(
@@ -289,6 +289,7 @@ class DictionaryPage(tk.Frame):
             yscrollcommand=scrollbar.set,
             bg=bg_colour,
             relief='sunken',
+            font=(font,10)
         )
         self.result_text.pack(side='left',fill='both',expand=True,padx=10,pady=10)
         scrollbar.config(command=self.result_text.yview)
@@ -310,12 +311,12 @@ class DictionaryPage(tk.Frame):
         if not word:
             return
 
-        definitions = get_word_definitions(word)
+        try:
+            definitions = get_word_definitions(word)
 
+            for i in range(len(definitions)):
+                self.result_text.insert('end', f'{i + 1} - {definitions[i]}\n')
 
-        if not definitions:
-            self.result_text.insert('1.0',f'No definition for {word} found')
+        except NoDefinition:
+            self.result_text.insert('1.0', f'Error - No definition for {word} found')
             return
-
-        for i in range(1,len(definitions)):
-            self.result_text.insert('end',f'{i} - {definitions[i]}\n')
