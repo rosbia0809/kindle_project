@@ -48,9 +48,9 @@ class KindleApp(tk.Tk):
         container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
-        for F in [HomePage,SearchBookPage,ReadBookPage,ReadingPage,DictionaryPage,]:
+        for F in [HomePage,SearchBookPage,ReadBookPage,ReadingPage,DictionaryPage]:
             '''
-            WordTesterPage,'''
+            WordTesterPage'''
 
             frame = F(container, self)
             self.frames[F] = frame
@@ -77,7 +77,7 @@ class HomePage(tk.Frame):
             '''
             ["Word Tester", WordTesterPage],'''
         ]
-        for b in range (len(buttons)):
+        for b in range (len(buttons)-1):
             t = buttons[b][0]
             page=buttons[b][1]
             tk.Button(self, text=str(t), width=20, height=2,
@@ -159,7 +159,7 @@ class ReadBookPage(tk.Frame):
         self.list_frame = tk.Frame(self, bg=bg_colour)
         self.list_frame.pack(pady=10,fill='both',expand=True)
 
-        HomeButton(self,self.list_frame).place(x=20,y=20)
+        HomeButton(self,self.controller).place(x=20,y=20)
 
     def on_show(self):
         for widget in self.list_frame.winfo_children():
@@ -187,13 +187,14 @@ class ReadingPage(tk.Frame):
         self.controller = controller
         self.current_book_id = None
 
-        top_bar = tk.Frame(self, bg=bg_colour)
+        top_bar = tk.Frame(self, bg=bg_colour, height=60)
         top_bar.pack(fill='x')
+        top_bar.propagate(False)
 
         self.title_label = tk.Label(top_bar, text='', font=(font, HEADER_SIZE), bg=bg_colour)
         self.title_label.place(x=200, y=20)
 
-        HomeButton(self,top_bar).place(x=20,y=20)
+        HomeButton(self,self.controller).place(x=20,y=20)
 
         tk.Button(
             top_bar,
@@ -238,12 +239,17 @@ class ReadingPage(tk.Frame):
             self.text_widget.update_idletasks()
             self.text_widget.yview_moveto(last_bookmark)
 
-    def add_new_bookmark(self):
+    def add_new_bookmark(self,dict=False):
+        ''' This function adds a new bookmark
+        the dict variable is used to identify whether the user wanted to add a bookmark
+        if it is simply due to the use of the dictionary then a message box won't be used'''
         position = self.text_widget.yview()[0]
         add_bookmark(self.current_book_id, position)
-        messagebox.showinfo('Bookmarked','Your place has been saved')
+        if not dict:
+            messagebox.showinfo('Bookmarked','Your place has been saved')
 
     def look_up_selected_word(self,event):
+        self.add_new_bookmark(True)
         try:
             not_clean = self.text_widget.get('insert wordstart', 'insert wordend')
             word = ''.join([char for char in not_clean if char not in string.punctuation])
@@ -287,7 +293,7 @@ class DictionaryPage(tk.Frame):
         self.result_text.pack(side='left',fill='both',expand=True,padx=10,pady=10)
         scrollbar.config(command=self.result_text.yview)
 
-        HomeButton(self,self.result_frame).place(x=20,y=20)
+        HomeButton(self,self.controller).place(x=20,y=20)
 
     def on_show(self, book_id=None, word=None):
         self.current_book_id = book_id
@@ -311,5 +317,5 @@ class DictionaryPage(tk.Frame):
             self.result_text.insert('1.0',f'No definition for {word} found')
             return
 
-        for i in range(len(definitions)):
+        for i in range(1,len(definitions)):
             self.result_text.insert('end',f'{i} - {definitions[i]}\n')
