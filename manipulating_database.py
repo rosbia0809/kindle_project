@@ -2,41 +2,39 @@ import sqlalchemy
 from Scripts.activate_this import existing_pkg_config_path
 from sqlalchemy import orm
 from kindle_database import Base, Books, Word, Bookmark, Lookup
-from data_from_gutenburg import get_book, get_gutenberg_details
-from dictionary_search import get_word_definitions, NoDefinition
+from scraping_data import get_book, get_gutenberg_details, get_word_definitions, NoDefinition
 from datetime import datetime
-
-class CurrentTimeError(Exception):
-    pass
-
 
 engine = sqlalchemy.create_engine('sqlite:///kindle.db')
 Base.metadata.create_all(engine)
 
+def check_book_duplicate(book_id):
+    with orm.Session(engine) as session:
+        duplicate = session.get(Books, str(book_id))
 
-def store_book(name: str):
-    g_title = get_gutenberg_details(name)[0]
-    g_author = get_gutenberg_details(name)[1]
-    g_id = get_gutenberg_details(name)[2]
+    return duplicate
 
-    if g_id is None:
-        print(f'no gutenberg id found for {name}')
-        return
-
-    book_text = get_book(g_id)
-
+def store_book(book_id: int, title: str, author: str, text: str):
     with orm.Session(engine) as session:
         book = Books(
-            book_id=str(g_id),
-            book_title=str(g_title),
-            book_author=str(g_author),
-            book_text=str(book_text),
+            book_id=book_id,
+            book_title=title,
+            book_author=author,
+            book_text=text,
         )
         session.add(book)
         session.commit()
 
-        print(f'{name} added to database')
+def get_books_from_database(id):
+    with orm.Session(engine) as session:
+        requested_book = session.get(Books, id)
+        return requested_book
 
+def get_all_books():
+    with orm.Session(engine) as session:
+        all_books = session.query(Books).all()
+
+    return all_books
 
 def store_word(u_w: str, book_id: int):
     try:

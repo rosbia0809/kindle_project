@@ -42,7 +42,7 @@ class Lookup(Base):
 class Books(Base):
     __tablename__ = 'BOOKS'
 
-    book_id: orm.Mapped[str] = orm.mapped_column(
+    book_id: orm.Mapped[int] = orm.mapped_column(
         primary_key=True,
         init=True,
     )

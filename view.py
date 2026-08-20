@@ -1,23 +1,14 @@
 import tkinter as tk
 from tkinter import messagebox
 import sqlalchemy
-from sqlalchemy import orm
-import string
 from datetime import datetime, timedelta
 import random
 
-from kindle_database import Base, Books, Word, Lookup
-from data_from_gutenburg import get_book, get_gutenberg_details
-from dictionary_search import get_word_definitions, NoDefinition
-from adding_to_database import get_latest_bookmark, add_bookmark, store_word
+from other_controls import HEADER_SIZE, HOME_COLOUR, bg_colour, font, clean_word
+from scraping_data import get_book, get_gutenberg_details, get_word_definitions, NoDefinition
+from manipulating_database import get_latest_bookmark, add_bookmark, store_word, check_book_duplicate, store_book, \
+    get_books_from_database, get_all_books
 
-HEADER_SIZE = 20
-HOME_COLOUR = 'brown'
-bg_colour= '#f2e9dc'
-font = 'Ariel'
-
-engine = sqlalchemy.create_engine('sqlite:///kindle.db')
-Base.metadata.create_all(engine)
 
 class HomeButton(tk.Button):
     '''A home page button that will appear on all pages'''
@@ -74,8 +65,7 @@ class HomePage(tk.Frame):
             ["Search Books", SearchBookPage],
             ["Read a Book", ReadBookPage],
             ["Dictionary", DictionaryPage],
-            '''
-            ["Word Tester", WordTesterPage],'''
+            '''["Word Tester", WordTesterPage]'''
         ]
         for b in range (len(buttons)-1):
             t = buttons[b][0]
@@ -111,7 +101,6 @@ class SearchBookPage(tk.Frame):
         self.status_label.config(text='Searching...', fg='black', font=font)
         self.update_idletasks()
 
-        #make this into its own subroutine!!!
         #calling get_gutenberg_details()
         result = get_gutenberg_details(name)
 
@@ -123,9 +112,7 @@ class SearchBookPage(tk.Frame):
         g_author = result[1]
         g_id = result[2]
 
-        #checking for duplicates before downloading
-        with orm.Session(engine) as session:
-            exists = session.get(Books,str(g_id))
+        exists = check_book_duplicate(g_id)
         if exists:
             self.status_label.config(text=f"Book for {g_title} already downloaded", fg='black', font=font)
             return
@@ -136,17 +123,7 @@ class SearchBookPage(tk.Frame):
             self.status_label.config(text=f"{g_title} could not be downloaded", fg='red', font=font)
             return
 
-        #adding to database
-        with orm.Session(engine) as session:
-            book = Books(
-                book_id=str(g_id),
-                book_title=g_title,
-                book_author=g_author,
-                book_text=book_text,
-            )
-            session.add(book)
-            session.commit()
-
+        store_book(g_id,g_title,g_author,book_text)
         self.status_label.config(text=f"Book for {g_title} downloaded", fg='green', font=font)
 
 class ReadBookPage(tk.Frame):
@@ -165,9 +142,7 @@ class ReadBookPage(tk.Frame):
         for widget in self.list_frame.winfo_children():
             widget.destroy()
 
-        #make into its own subroutine!!!
-        with orm.Session(engine) as session:
-            books = session.query(Books).all()
+        books = get_all_books()
 
         if not books:
             tk.Label(self.list_frame, text='No books downloaded...', font=font, bg=bg_colour).pack(pady=20)
@@ -192,7 +167,7 @@ class ReadingPage(tk.Frame):
         top_bar.propagate(False)
 
         self.title_label = tk.Label(top_bar, text='', font=(font, HEADER_SIZE), bg=bg_colour)
-        self.title_label.place(x=200, y=20)
+        self.title_label.place(x=100, y=20)
 
         HomeButton(self,self.controller).place(x=20,y=20)
 
@@ -227,8 +202,7 @@ class ReadingPage(tk.Frame):
             return
         self.current_book_id = book_id
 
-        with orm.Session(engine) as session:
-            book=session.get(Books, book_id)
+        book = get_books_from_database(book_id)
 
         self.title_label.config(text=f'{book.book_title}')
         self.text_widget.delete(1.0, tk.END)
@@ -252,7 +226,7 @@ class ReadingPage(tk.Frame):
         self.add_new_bookmark(True)
         try:
             not_clean = self.text_widget.get('insert wordstart', 'insert wordend')
-            word = ''.join([char for char in not_clean if char not in string.punctuation])
+            word = clean_word(not_clean)
         except tk.TclError:
             return
 
@@ -313,10 +287,13 @@ class DictionaryPage(tk.Frame):
 
         try:
             definitions = get_word_definitions(word)
-
             for i in range(len(definitions)):
                 self.result_text.insert('end', f'{i + 1} - {definitions[i]}\n')
 
         except NoDefinition:
             self.result_text.insert('1.0', f'Error - No definition for {word} found')
             return
+'''
+class WordPage(tk.Frame):
+    def __init__(self, parent, controller):
+        pass'''
