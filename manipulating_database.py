@@ -3,7 +3,7 @@ from Scripts.activate_this import existing_pkg_config_path
 from sqlalchemy import orm
 from kindle_database import Base, Books, Word, Bookmark, Lookup
 from scraping_data import get_book, get_gutenberg_details, get_word_definitions, NoDefinition
-from datetime import datetime
+from datetime import datetime, timedelta
 
 engine = sqlalchemy.create_engine('sqlite:///kindle.db')
 Base.metadata.create_all(engine)
@@ -36,15 +36,7 @@ def get_all_books():
 
     return all_books
 
-def store_word(u_w: str, book_id: int):
-    try:
-        u_def = get_word_definitions(u_w)
-        print(u_def)
-
-    except NoDefinition:
-        print('No definition found')
-        return None
-
+def store_word(u_def, u_w:str,book_id: int):
     with orm.Session(engine) as session:
         for defi in u_def:
             exists = session.query(Word).filter_by(word=str(u_w), meaning=defi).first()
@@ -68,7 +60,6 @@ def store_word(u_w: str, book_id: int):
             session.add(lookup)
 
         session.commit()
-    return u_def
 
 def get_latest_bookmark(book_id: int):
     with orm.Session(engine) as session:
@@ -92,4 +83,22 @@ def add_bookmark(book_id: int, position: float):
         )
         session.add(bookmark)
         session.commit()
+
+def get_recent_words():
+    cutoff = datetime.now() - timedelta(days=30)
+    with orm.Session(engine) as session:
+        recent_words = (
+            session.query(Word)
+            .join(Lookup)
+            .filter(Lookup.time_stamp >= cutoff)
+            .distinct()
+            .all()
+        )
+    return recent_words
+
+def get_all_words():
+    with orm.Session(engine) as session:
+        all_word = session.query(Word).all()
+    return all_word
+
 # Make more for the validation i.e. if get ids returns none do something about that

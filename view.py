@@ -1,10 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
-import sqlalchemy
 from datetime import datetime, timedelta
-import random
 
-from other_controls import HEADER_SIZE, HOME_COLOUR, bg_colour, font, clean_word
+from other_controls import HEADER_SIZE, HOME_COLOUR, bg_colour, font, clean_word, new_question, check_answer
 from scraping_data import get_book, get_gutenberg_details, get_word_definitions, NoDefinition
 from manipulating_database import get_latest_bookmark, add_bookmark, store_word, check_book_duplicate, store_book, \
     get_books_from_database, get_all_books
@@ -39,9 +37,7 @@ class KindleApp(tk.Tk):
         container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
-        for F in [HomePage,SearchBookPage,ReadBookPage,ReadingPage,DictionaryPage]:
-            '''
-            WordTesterPage'''
+        for F in [HomePage,SearchBookPage,ReadBookPage,ReadingPage,DictionaryPage,WordTesterPage]:
 
             frame = F(container, self)
             self.frames[F] = frame
@@ -65,9 +61,10 @@ class HomePage(tk.Frame):
             ["Search Books", SearchBookPage],
             ["Read a Book", ReadBookPage],
             ["Dictionary", DictionaryPage],
-            '''["Word Tester", WordTesterPage]'''
+            ["Word Tester", WordTesterPage],
         ]
-        for b in range (len(buttons)-1):
+
+        for b in range (len(buttons)):
             t = buttons[b][0]
             page=buttons[b][1]
             tk.Button(self, text=str(t), width=20, height=2,
@@ -287,13 +284,75 @@ class DictionaryPage(tk.Frame):
 
         try:
             definitions = get_word_definitions(word)
+            store_word(definitions,word, self.current_book_id)
+
             for i in range(len(definitions)):
                 self.result_text.insert('end', f'{i + 1} - {definitions[i]}\n')
 
         except NoDefinition:
             self.result_text.insert('1.0', f'Error - No definition for {word} found')
             return
-'''
-class WordPage(tk.Frame):
+
+class WordTesterPage(tk.Frame):
     def __init__(self, parent, controller):
-        pass'''
+        super().__init__(parent,bg=bg_colour)
+        self.controller = controller
+        self.correct_answer = None
+
+        tk.Label(self, text = 'Word Testing', font=(font, HEADER_SIZE), bg=bg_colour).pack(pady=20)
+
+        self.question_label = tk.Label(self, text='', font=(font, 14), bg=bg_colour, wraplength=600)
+        self.question_label.pack(pady=20)
+
+        self.option_buttons = []
+        for i in range(4):
+            b = tk.Button(self, text='', width=50)
+            b.pack(pady=5)
+            self.option_buttons.append(b)
+
+        self.feedback_label = tk.Label(self, text='', font=(font, 14), bg=bg_colour)
+        self.feedback_label.pack(pady=10)
+
+        tk.Button(
+            self,
+            text='Next Question',
+            command = self.next_question
+        ).pack(pady=10)
+
+        HomeButton(self, self.controller).place(x=20, y=20)
+
+    def on_show(self):
+        self.next_question()
+
+    def next_question(self):
+        self.feedback_label.config(text='')
+
+        question_details = new_question()
+
+        if question_details is None:
+            self.question_label.config(text='Not enough word history yet - look up some more words')
+            for b in self.option_buttons:
+                b.config(
+                    text='',
+                    state='disabled',
+                    command=b.destroy
+                )
+            return
+
+        self.correct_answer = question_details[2]
+        self.question_label.config(text=f'What does {question_details[1]} mean?')
+
+        for i in range(len(self.option_buttons)):
+            self.option_buttons[i].config(
+                text=question_details[0][i],
+                state='normal',
+                command=lambda o=question_details[0][i]: self.check_option(o)
+            )
+
+    def check_option(self, option):
+        result = check_answer(option, self.correct_answer)
+
+        if result:
+            self.feedback_label.config(text='Correct!', fg='green')
+        else:
+            self.feedback_label.config(text='Incorrect!', fg='red')
