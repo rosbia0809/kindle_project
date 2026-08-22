@@ -2,6 +2,7 @@ import sqlalchemy
 import datetime
 #from gutenbergpy.parse.book import Book
 from sqlalchemy import orm as orm
+from typing import Optional
 
 class Base(orm.DeclarativeBase, orm.MappedAsDataclass):
     pass
@@ -31,10 +32,10 @@ class Lookup(Base):
     word_id: orm.Mapped[int] = orm.mapped_column(
         sqlalchemy.ForeignKey('WORDS.word_id'),
     )
-    book_id: orm.Mapped[int] = orm.mapped_column(
+    book_id: orm.Mapped[Optional[str]] = orm.mapped_column(
         sqlalchemy.ForeignKey('BOOKS.book_id'),
+        default=None
     )
-
     time_stamp: orm.Mapped[datetime.datetime] = orm.mapped_column(
         default=datetime.datetime.now(),
     )

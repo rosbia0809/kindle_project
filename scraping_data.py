@@ -44,8 +44,8 @@ def get_gutenberg_details(search):
     #trying to see if the values in m_results match up to the book
     t_results = results.find_all('span', {'class':'title'})[1]
     a_results = results.find_all('span', {'class':'subtitle'})[1]
+    # make fuzzy into its own subroutine
     scr = fuzz.ratio(search, t_results.text)
-    print (scr)
     if scr < 60:
         return None
 

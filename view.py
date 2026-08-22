@@ -343,9 +343,13 @@ class WordTesterPage(tk.Frame):
         self.question_label.config(text=f'What does {question_details[1]} mean?')
 
         for i in range(len(self.option_buttons)):
-            self.option_buttons[i].config(
+            b = self.option_buttons[i]
+            b.update_idletasks()
+            width=b.winfo_width()
+            b.config(
                 text=question_details[0][i],
                 state='normal',
+                wraplength=width,
                 command=lambda o=question_details[0][i]: self.check_option(o)
             )
 
