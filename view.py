@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import messagebox
-from datetime import datetime, timedelta
 
 from other_controls import HEADER_SIZE, HOME_COLOUR, bg_colour, font, clean_word, new_question, check_answer
 from scraping_data import get_book, get_gutenberg_details, get_word_definitions, NoDefinition
