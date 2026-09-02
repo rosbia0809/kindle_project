@@ -1,5 +1,4 @@
 import sqlalchemy
-from Scripts.activate_this import existing_pkg_config_path
 from sqlalchemy import orm
 from kindle_database import Base, Books, Word, Bookmark, Lookup
 from scraping_data import get_book, get_gutenberg_details, get_word_definitions, NoDefinition
