@@ -5,7 +5,7 @@ from kindle_database import Base, Books, Word, Bookmark, Lookup
 from scraping_data import get_book, get_gutenberg_details, get_word_definitions, NoDefinition
 from datetime import datetime, timedelta
 
-engine = sqlalchemy.create_engine('sqlite:///kindle.db')
+engine = sqlalchemy.create_engine('sqlite:///kindle.sqlite')
 Base.metadata.create_all(engine)
 
 def check_book_duplicate(book_id):

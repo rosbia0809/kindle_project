@@ -3,7 +3,7 @@ from kindle_database import Word, Lookup
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-engine = create_engine('sqlite:///kindle.db')
+engine = create_engine('sqlite:///kindle.sqlite')
 
 with Session(engine) as session:
     all_words = session.query(Word).all()

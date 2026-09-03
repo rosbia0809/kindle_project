@@ -41,9 +41,13 @@ def get_gutenberg_details(search):
     #returning all the values that have an href
     m_results = results.find_all(href = True)
 
-    #trying to see if the values in m_results match up to the book
-    t_results = results.find_all('span', {'class':'title'})[1]
-    a_results = results.find_all('span', {'class':'subtitle'})[1]
+    try:
+        #trying to see if the values in m_results match up to the book
+        t_results = results.find_all('span', {'class':'title'})[1]
+        a_results = results.find_all('span', {'class':'subtitle'})[1]
+    except IndexError:
+        return None
+
     # make fuzzy into its own subroutine
     scr = fuzz.ratio(search, t_results.text)
     if scr < 60:
@@ -64,7 +68,9 @@ def get_gutenberg_details(search):
             else:
                 count = count + 1
 
-        return t_results.text, a_results.text, int(g_id)
+        return t_results.text, a_results.text, int(g_id), scr
+    # get this to work in the view - show the first option, if the scr is less than 60 and then only go to this if the scr is more than 10
+
 
 def get_book(g_id):
     # download the book via its id

@@ -108,6 +108,7 @@ class SearchBookPage(tk.Frame):
         g_author = result[1]
         g_id = result[2]
 
+
         exists = check_book_duplicate(g_id)
         if exists:
             self.status_label.config(text=f"Book for {g_title} already downloaded", fg='black', font=font)
