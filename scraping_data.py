@@ -50,7 +50,7 @@ def get_gutenberg_details(search):
 
     # make fuzzy into its own subroutine
     scr = fuzz.ratio(search, t_results.text)
-    if scr < 60:
+    if scr < 10:
         return None
 
     else:
@@ -73,7 +73,7 @@ def get_gutenberg_details(search):
 
 
 def get_book(g_id):
-    # download the book via its id
+    '''download the book via its id'''
     # to find a book's ID, look it up on the gutenberg website (the number in its URL is the ID)
     raw_book = g_tg.get_text_by_id(g_id)
 

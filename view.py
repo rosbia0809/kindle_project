@@ -1,7 +1,7 @@
 import tkinter as tk
-from tkinter import messagebox
+import tkinter.messagebox
 
-from other_controls import HEADER_SIZE, HOME_COLOUR, bg_colour, font, clean_word, new_question, check_answer
+from other_controls import HEADER_SIZE, HOME_COLOUR, bg_colour, current_font, clean_word, new_question, check_answer
 from scraping_data import get_book, get_gutenberg_details, get_word_definitions, NoDefinition
 from manipulating_database import get_latest_bookmark, add_bookmark, store_word, check_book_duplicate, store_book, \
     get_books_from_database, get_all_books
@@ -15,7 +15,7 @@ class HomeButton(tk.Button):
             text='Home',
             fg=HOME_COLOUR,
             bg='white',
-            font=font,
+            font=current_font,
             command=lambda: controller.show_frame(HomePage),
             **kwargs
         )
@@ -36,7 +36,7 @@ class KindleApp(tk.Tk):
         container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
-        for F in [HomePage,SearchBookPage,ReadBookPage,ReadingPage,DictionaryPage,WordTesterPage]:
+        for F in [HomePage,SearchBookPage,ReadBookPage,ReadingPage,DictionaryPage,WordTesterPage,ThemesPage,]:
 
             frame = F(container, self)
             self.frames[F] = frame
@@ -54,13 +54,14 @@ class HomePage(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent, bg=bg_colour)
 
-        tk.Label(self, text="Kindle", font=(font, 28), bg=bg_colour).pack(pady=40)
+        tk.Label(self, text="Kindle", font=(current_font, 28), bg=bg_colour).pack(pady=40)
 
         buttons = [
             ["Search Books", SearchBookPage],
             ["Read a Book", ReadBookPage],
             ["Dictionary", DictionaryPage],
             ["Word Tester", WordTesterPage],
+            ["Theme Changer", ThemesPage],
         ]
 
         for b in range (len(buttons)):
@@ -74,18 +75,35 @@ class SearchBookPage(tk.Frame):
         super().__init__(parent, bg=bg_colour)
         self.controller = controller
 
-        tk.Label(self, text='Search Books', font=(font, HEADER_SIZE), bg=bg_colour).pack(pady=20)
+        tk.Label(self, text='Search Books', font=(current_font, HEADER_SIZE), bg=bg_colour).pack(pady=20)
 
         self.entry = tk.Entry(self,width=40)
         self.entry.pack(pady=20)
 
         # this label will show whether the book has been found in Gutenberg Project or not
-        self.status_label = tk.Label(self, text='', bg=bg_colour, font=font)
+        self.status_label = tk.Label(self, text='', bg=bg_colour, font=current_font)
         self.status_label.pack(pady=20)
 
         tk.Button(self, text="Search Books", command=self.search_book).pack(pady=5)
 
         HomeButton(self,controller).place(x=20,y=20)
+
+    def download_book(self,title, author, id):
+        book_text=get_book(id)
+        '''
+        try:
+            book_text = get_book(id)
+        except Exception as e:
+            #find what exception this is and rename
+            print(e)
+            self.status_label.config(text=f"{title} could not be downloaded", fg='red', font=font, width=50)
+            return
+        '''
+        # Do i need this?
+
+        store_book(id,title,author,book_text)
+        self.status_label.config(text=f"Book for {title} downloaded", fg='green', font=current_font, width=50)
+
 
     def search_book(self):
         name = self.entry.get().strip()
@@ -94,41 +112,39 @@ class SearchBookPage(tk.Frame):
             self.status_label.config(text="Please enter a book name")
             return
 
-        self.status_label.config(text='Searching...', fg='black', font=font)
+        self.status_label.config(text='Searching...', fg='black', font=current_font, width=50)
         self.update_idletasks()
 
         #calling get_gutenberg_details()
         result = get_gutenberg_details(name)
 
         if result is None:
-            self.status_label.config(text=f"Book for {name} not found", fg='red', font=font)
+            self.status_label.config(text=f"Book for {name} not found", fg='red', font=current_font, width=50)
             return
 
-        g_title = result[0]
-        g_author = result[1]
-        g_id = result[2]
-
+        g_title, g_author, g_id, g_scr = result
+        # g_title = result[0]
+        # g_author = result[1]
+        # g_id = result[2]
 
         exists = check_book_duplicate(g_id)
+
         if exists:
-            self.status_label.config(text=f"Book for {g_title} already downloaded", fg='black', font=font)
+            self.status_label.config(text=f"Book for {g_title} already downloaded", fg='black', font=current_font, width=50)
             return
 
-        try:
-            book_text = get_book(g_id)
-        except Exception:
-            self.status_label.config(text=f"{g_title} could not be downloaded", fg='red', font=font)
-            return
-
-        store_book(g_id,g_title,g_author,book_text)
-        self.status_label.config(text=f"Book for {g_title} downloaded", fg='green', font=font)
+        response = tkinter.messagebox.askyesno(title='Your book choice', message=f'Match level is {g_scr} out of 100 \n\nDo you want to download {g_title}')
+        if response:
+            self.download_book(g_title, g_author, g_id)
+        else:
+            self.status_label.config(text=f"No book downloaded", fg='black', font=current_font, width=50)
 
 class ReadBookPage(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent, bg=bg_colour)
         self.controller = controller
 
-        tk.Label(self, text="Your Books:", font=(font, HEADER_SIZE), bg=bg_colour).pack(pady=20)
+        tk.Label(self, text="Your Books:", font=(current_font, HEADER_SIZE), bg=bg_colour).pack(pady=20)
 
         self.list_frame = tk.Frame(self, bg=bg_colour)
         self.list_frame.pack(pady=10,fill='both',expand=True)
@@ -142,7 +158,7 @@ class ReadBookPage(tk.Frame):
         books = get_all_books()
 
         if not books:
-            tk.Label(self.list_frame, text='No books downloaded...', font=font, bg=bg_colour).pack(pady=20)
+            tk.Label(self.list_frame, text='No books downloaded...', font=current_font, bg=bg_colour).pack(pady=20)
             return
 
         for book in books:
@@ -163,7 +179,7 @@ class ReadingPage(tk.Frame):
         top_bar.pack(fill='x')
         top_bar.propagate(False)
 
-        self.title_label = tk.Label(top_bar, text='', font=(font, HEADER_SIZE), bg=bg_colour)
+        self.title_label = tk.Label(top_bar, text='', font=(current_font, HEADER_SIZE), bg=bg_colour)
         self.title_label.place(x=100, y=20)
 
         HomeButton(self,self.controller).place(x=20,y=20)
@@ -186,7 +202,7 @@ class ReadingPage(tk.Frame):
             yscrollcommand=scrollbar.set,
             bg=bg_colour,
             relief='sunken',
-            font=font,
+            font=current_font,
         )
         self.text_widget.pack(side='left',fill='both',expand=True,padx=10,pady=10)
         scrollbar.config(command=self.text_widget.yview)
@@ -217,7 +233,7 @@ class ReadingPage(tk.Frame):
         position = self.text_widget.yview()[0]
         add_bookmark(self.current_book_id, position)
         if not dict:
-            messagebox.showinfo('Bookmarked','Your place has been saved')
+            tkinter.messagebox.showinfo('Bookmarked','Your place has been saved')
 
     def look_up_selected_word(self,event):
         self.add_new_bookmark(True)
@@ -237,7 +253,7 @@ class DictionaryPage(tk.Frame):
         self.controller = controller
         self.current_book_id = None
 
-        tk.Label(self, text='Dictionary',font=(font, HEADER_SIZE), bg=bg_colour).pack(pady=20)
+        tk.Label(self, text='Dictionary', font=(current_font, HEADER_SIZE), bg=bg_colour).pack(pady=20)
 
         self.entry = tk.Entry(self, width=50)
         self.entry.pack(pady=10)
@@ -260,7 +276,7 @@ class DictionaryPage(tk.Frame):
             yscrollcommand=scrollbar.set,
             bg=bg_colour,
             relief='sunken',
-            font=(font,10)
+            font=(current_font, 10)
         )
         self.result_text.pack(side='left',fill='both',expand=True,padx=10,pady=10)
         scrollbar.config(command=self.result_text.yview)
@@ -299,9 +315,9 @@ class WordTesterPage(tk.Frame):
         self.controller = controller
         self.correct_answer = None
 
-        tk.Label(self, text = 'Word Testing', font=(font, HEADER_SIZE), bg=bg_colour).pack(pady=20)
+        tk.Label(self, text = 'Word Testing', font=(current_font, HEADER_SIZE), bg=bg_colour).pack(pady=20)
 
-        self.question_label = tk.Label(self, text='', font=(font, 14), bg=bg_colour, wraplength=600)
+        self.question_label = tk.Label(self, text='', font=(current_font, 14), bg=bg_colour, wraplength=600)
         self.question_label.pack(pady=20)
 
         self.option_buttons = []
@@ -310,7 +326,7 @@ class WordTesterPage(tk.Frame):
             b.pack(pady=5)
             self.option_buttons.append(b)
 
-        self.feedback_label = tk.Label(self, text='', font=(font, 14), bg=bg_colour)
+        self.feedback_label = tk.Label(self, text='', font=(current_font, 14), bg=bg_colour)
         self.feedback_label.pack(pady=10)
 
         tk.Button(
@@ -360,3 +376,27 @@ class WordTesterPage(tk.Frame):
             self.feedback_label.config(text='Correct!', fg='green')
         else:
             self.feedback_label.config(text='Incorrect!', fg='red')
+
+class ThemesPage(tk.Frame):
+    def __init__(self, parent, controller):
+        super().__init__(parent, bg=bg_colour)
+        self.controller = controller
+
+        tk.Label(self, text='Themes', font=(current_font, HEADER_SIZE), bg=bg_colour).pack(pady=20)
+        HomeButton(self, self.controller).place(x=20, y=20)
+
+        font_buttons = [
+            ["Times New Roman", 'Times New Roman'],
+            ["Ariel", 'Ariel'],
+            ["Courier", 'Courier'],
+            ["Comic Sans", 'Comic Sans'],
+            ["Sans Serif", 'Sans Serif'],
+        ]
+
+        for t, n_font in font_buttons:
+            tk.Button(self, text=str(t), width=20, height=2,
+                      command=lambda f=n_font: self.change_font(f)).pack(pady=8, padx=50)
+
+    def change_font(self,new_font):
+        current_font = new_font
+        print("Boo")
