@@ -1,6 +1,8 @@
 import tkinter as tk
 import tkinter.messagebox
 
+import wid
+
 from other_controls import HEADER_SIZE, HOME_COLOUR, bg_colour, current_font, clean_word, new_question, check_answer
 from scraping_data import get_book, get_gutenberg_details, get_word_definitions, NoDefinition
 from manipulating_database import get_latest_bookmark, add_bookmark, store_word, check_book_duplicate, store_book, \
@@ -399,4 +401,19 @@ class ThemesPage(tk.Frame):
 
     def change_font(self,new_font):
         current_font = new_font
-        print("Boo")
+
+
+
+        self.all_children()
+
+    def all_children(self,window=None,finlist=None):
+        if not window:
+            window = self.master
+
+        finlist = finlist or []
+
+        children = window.winfo_children()
+        for item in children:
+            print(item)
+            finlist.append(item)
+            self.all_children(item, finlist)
