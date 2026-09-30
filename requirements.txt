@@ -1,7 +1,6 @@
 pip-system-certs
 thefuzz
 sqlalchemy
-gutenbergpy.textget # for get_book
 requests
 bs4
-json
+gutenbergpy

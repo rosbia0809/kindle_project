@@ -423,6 +423,9 @@ class ThemesPage(ttk.Frame):
         print(new_font)
 
         self.style.configure('TFrame',font=new_font)
+        self.style.configure('TLabel',font=new_font)
+        self.style.configure('TButton',font=new_font)
+        self.style.configure('TCombobox',font=new_font)
 
 
 

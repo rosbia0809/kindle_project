@@ -1,7 +1,6 @@
 import random
 import string
 from manipulating_database import get_recent_words, get_all_words
-from scraping_data import get_gutenberg_details
 
 HEADER_SIZE = 20
 HOME_COLOUR = 'brown'
