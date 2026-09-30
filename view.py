@@ -69,9 +69,7 @@ class HomePage(ttk.Frame):
             ["Theme Changer", ThemesPage],
         ]
 
-        for b in range (len(buttons)):
-            t = buttons[b][0]
-            page=buttons[b][1]
+        for t, page in buttons:
             ttk.Button(self, text=str(t), width=20,
                        command=lambda p=page: controller.show_frame(p)).pack(pady=8,padx=50)
 
@@ -403,6 +401,21 @@ class ThemesPage(ttk.Frame):
         ttk.Label(self, text='Themes', font=(current_font, HEADER_SIZE), background=bg_colour).pack(pady=20)
         HomeButton(self, self.controller).place(x=20, y=20)
 
+
+        theme_options = [
+            ('Change Font', FontFrame),
+            ('Change Background Colour', BackgroundFrame)
+        ]
+        
+        for b, page in theme_options:
+            ttk.Button(self, text=str(t), width=20,
+                       command=lambda p=page: controller.show_frame(p)).pack(pady=8,padx=50)
+
+            self.style.configure("TButton",
+                                 background=bg_colour,
+                                 font=current_font, )
+
+        '''
         font_buttons = [
             ("Times New Roman", 'Times New Roman'),
             ("Ariel", 'Ariel'),
@@ -416,6 +429,8 @@ class ThemesPage(ttk.Frame):
             b = tk.Button(self, text=str(t), width=20, font=full_font)
             b.pack(pady=8, padx=50)
             b.config(command=lambda f=full_font: self.change_font(f))
+            
+        '''
 
 
     def change_font(self, new_font):
@@ -426,11 +441,13 @@ class ThemesPage(ttk.Frame):
         self.style.configure('TLabel',font=new_font)
         self.style.configure('TButton',font=new_font)
         self.style.configure('TCombobox',font=new_font)
+        self.style.configure('TEntry',font=new_font)
+
+    def change_bg(self,new_bg_colour):
+        pass
 
 
-
-        #self.all_children()
-
+    '''
     def all_children(self,window=None,finlist=None):
         if not window:
             window = self.master
@@ -442,3 +459,5 @@ class ThemesPage(ttk.Frame):
             print(item)
             finlist.append(item)
             self.all_children(item, finlist)
+        
+        '''
