@@ -32,13 +32,16 @@ class KindleApp(tkinter.Tk):
         self.configure(bg=bg_colour)
         self.style = ttk.Style()
 
+        self.style.configure("Custom.TLabel", background=bg_colour, font=(current_font,HEADER_SIZE))
+        self.style.configure("Other.TLabel", background=bg_colour, font=(current_font,HEADER_SIZE))
+
         container = ttk.Frame(self)
         container.pack(fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
-        for F in [HomePage,SearchBookPage,ReadBookPage,ReadingPage,DictionaryPage,WordTesterPage,ThemesPage,]:
+        for F in [HomePage,SearchBookPage,ReadBookPage,ReadingPage,DictionaryPage,WordTesterPage,ThemesPage,FontFrame,BackgroundFrame]:
 
             frame = F(container, self)
             self.frames[F] = frame
@@ -59,7 +62,7 @@ class HomePage(ttk.Frame):
         super().__init__(parent)
         self.style = ttk.Style()
 
-        ttk.Label(self, text="Kindle", font=(current_font, 28), background=bg_colour).pack(pady=40)
+        ttk.Label(self, text="Kindle", style='Custom.TLabel').pack(pady=40)
 
         buttons = [
             ["Search Books", SearchBookPage],
@@ -82,13 +85,13 @@ class SearchBookPage(ttk.Frame):
         super().__init__(parent)
         self.controller = controller
 
-        ttk.Label(self, text='Search Books', font=(current_font, HEADER_SIZE), background=bg_colour).pack(pady=20)
+        ttk.Label(self, text='Search Books', style='Custom.TLabel').pack(pady=20)
 
         self.entry = ttk.Entry(self, width=40)
         self.entry.pack(pady=20)
 
         # this label will show whether the book has been found in Gutenberg Project or not
-        self.status_label = ttk.Label(self, text='', background=bg_colour, font=current_font)
+        self.status_label = ttk.Label(self, text='')
         self.status_label.pack(pady=20)
 
         ttk.Button(self, text="Search Books", command=self.search_book).pack(pady=5)
@@ -156,7 +159,7 @@ class ReadBookPage(ttk.Frame):
         super().__init__(parent)
         self.controller = controller
 
-        ttk.Label(self, text="Your Books:", font=(current_font, HEADER_SIZE), background=bg_colour).pack(pady=20)
+        ttk.Label(self, text="Your Books:", style='Custom.TLabel').pack(pady=20)
 
         self.list_frame = ttk.Frame(self)
         self.list_frame.pack(pady=10,fill='both',expand=True)
@@ -170,7 +173,7 @@ class ReadBookPage(ttk.Frame):
         books = get_all_books()
 
         if not books:
-            ttk.Label(self.list_frame, text='No books downloaded...', font=current_font, background=bg_colour).pack(pady=20)
+            ttk.Label(self.list_frame, text='No books downloaded...').pack(pady=20)
             return
 
         for book in books:
@@ -191,7 +194,7 @@ class ReadingPage(ttk.Frame):
         top_bar.pack(fill='x')
         top_bar.propagate(False)
 
-        self.title_label = ttk.Label(top_bar, text='', font=(current_font, HEADER_SIZE), background=bg_colour)
+        self.title_label = ttk.Label(top_bar, text='',style='Custom.TLabel')
         self.title_label.place(x=100, y=20)
 
         HomeButton(self,self.controller).place(x=20,y=20)
@@ -266,7 +269,7 @@ class DictionaryPage(ttk.Frame):
         self.controller = controller
         self.current_book_id = None
 
-        ttk.Label(self, text='Dictionary', font=(current_font, HEADER_SIZE), background=bg_colour).pack(pady=20)
+        ttk.Label(self, text='Dictionary', style='Custom.TLabel').pack(pady=20)
 
         self.entry = ttk.Entry(self, width=50)
         self.entry.pack(pady=10)
@@ -328,9 +331,9 @@ class WordTesterPage(ttk.Frame):
         self.controller = controller
         self.correct_answer = None
 
-        ttk.Label(self, text ='Word Testing', font=(current_font, HEADER_SIZE), background=bg_colour).pack(pady=20)
+        ttk.Label(self, text ='Word Testing', style='Custom.TLabel').pack(pady=20)
 
-        self.question_label = ttk.Label(self, text='', font=(current_font, 14), background=bg_colour, wraplength=600)
+        self.question_label = ttk.Label(self, text='', wraplength=600)
         self.question_label.pack(pady=20)
 
         self.option_buttons = []
@@ -339,7 +342,7 @@ class WordTesterPage(ttk.Frame):
             b.pack(pady=5)
             self.option_buttons.append(b)
 
-        self.feedback_label = ttk.Label(self, text='', font=(current_font, 14), background=bg_colour)
+        self.feedback_label = ttk.Label(self, text='')
         self.feedback_label.pack(pady=10)
 
         ttk.Button(
@@ -398,7 +401,7 @@ class ThemesPage(ttk.Frame):
         self.controller = controller
         self.style = ttk.Style()
 
-        ttk.Label(self, text='Themes', font=(current_font, HEADER_SIZE), background=bg_colour).pack(pady=20)
+        ttk.Label(self, text='Themes', style='Custom.TLabel').pack(pady=20)
         HomeButton(self, self.controller).place(x=20, y=20)
 
 
@@ -408,14 +411,23 @@ class ThemesPage(ttk.Frame):
         ]
         
         for b, page in theme_options:
-            ttk.Button(self, text=str(t), width=20,
+            ttk.Button(self, text=str(b), width=20,
                        command=lambda p=page: controller.show_frame(p)).pack(pady=8,padx=50)
 
             self.style.configure("TButton",
                                  background=bg_colour,
                                  font=current_font, )
 
-        '''
+class FontFrame(ttk.Frame):
+    def __init__(self, parent, controller):
+        super().__init__(parent)
+        self.controller = controller
+        self.style = ttk.Style()
+
+        self.l = (ttk.Label(self, text='Changing Font...', style='Custom.TLabel'))
+        self.l.pack(pady=20)
+        HomeButton(self, self.controller).place(x=20, y=20)
+
         font_buttons = [
             ("Times New Roman", 'Times New Roman'),
             ("Ariel", 'Ariel'),
@@ -429,9 +441,6 @@ class ThemesPage(ttk.Frame):
             b = tk.Button(self, text=str(t), width=20, font=full_font)
             b.pack(pady=8, padx=50)
             b.config(command=lambda f=full_font: self.change_font(f))
-            
-        '''
-
 
     def change_font(self, new_font):
         current_font = new_font
@@ -443,11 +452,39 @@ class ThemesPage(ttk.Frame):
         self.style.configure('TCombobox',font=new_font)
         self.style.configure('TEntry',font=new_font)
 
+class BackgroundFrame(ttk.Frame):
+    def __init__(self, parent, controller):
+        super().__init__(parent)
+        self.controller = controller
+
+        ttk.Label(self, text='Changing Background...', style='Custom.TLabel').pack(pady=20)
+        HomeButton(self, self.controller).place(x=20, y=20)
+
+        self.style = ttk.Style()
+
+
+        bg_buttons = [
+            ('White', 'white'),
+            ('Paper', '#f2e9dc'),
+            ('Purple', 'purple')
+        ]
+
+        for c, b_but in bg_buttons:
+            b = tk.Button(self, text=str(c), width=20, background=b_but)
+            b.pack(pady=8, padx=50)
+            b.config(command=lambda b=b_but: self.change_bg(b))
+
     def change_bg(self,new_bg_colour):
-        pass
+        bg_colour = new_bg_colour
+
+        self.style.configure('TFrame',background=new_bg_colour)
+        self.style.configure('Custom.TLabel',background=new_bg_colour)
+        #self.style.configure(self.l.configure,background=new_bg_colour)
+        self.style.configure('TCombobox',background=new_bg_colour)
 
 
-    '''
+
+'''
     def all_children(self,window=None,finlist=None):
         if not window:
             window = self.master
