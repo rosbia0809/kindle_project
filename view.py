@@ -30,6 +30,7 @@ class KindleApp(tkinter.Tk):
         self.title("Kindle App")
         self.geometry("800x600")
         self.theme = Theme()
+
         self.theme.load()
         self.theme.add_listener(self.apply_theme)
         self.style = ttk.Style()

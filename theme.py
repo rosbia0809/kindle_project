@@ -20,8 +20,7 @@ class Theme:
                 lines = file.readlines()
                 temp_family = lines[0].strip()
                 temp_background = lines[1].strip()
-                tk._default_root.winfo_rgb(temp_background)
-        except (FileNotFoundError, tk.TclError):
+        except (FileNotFoundError):
             return
 
         self.background = temp_background
