@@ -3,11 +3,11 @@ import tkinter.messagebox
 import tkinter.font as tkFont
 import tkinter as tk
 
-from other_controls import HEADER_SIZE, HOME_COLOUR, bg_colour, current_font, clean_word, new_question, check_answer
+from other_controls import HEADER_SIZE, HOME_COLOUR, new_question, check_answer, clean_word
+from theme import Theme
 from scraping_data import get_book, get_gutenberg_details, get_word_definitions, NoDefinition
 from manipulating_database import get_latest_bookmark, add_bookmark, store_word, check_book_duplicate, store_book, \
     get_books_from_database, get_all_books
-
 
 class HomeButton(tk.Button):
     '''A home page button that will appear on all pages'''
@@ -17,7 +17,7 @@ class HomeButton(tk.Button):
             text='Home',
             command=lambda: controller.show_frame(HomePage),
             foreground=HOME_COLOUR,
-            font = current_font,
+            font = controller.theme.body_font,
             **kwargs
         )
 
@@ -29,11 +29,11 @@ class KindleApp(tkinter.Tk):
         super().__init__()
         self.title("Kindle App")
         self.geometry("800x600")
-        self.configure(bg=bg_colour)
+        self.theme = Theme()
+        self.theme.load()
+        self.theme.add_listener(self.apply_theme)
         self.style = ttk.Style()
-
-        self.style.configure("Custom.TLabel", background=bg_colour, font=(current_font,HEADER_SIZE))
-        self.style.configure("Other.TLabel", background=bg_colour, font=(current_font,HEADER_SIZE))
+        self.style.theme_use('clam')
 
         container = ttk.Frame(self)
         container.pack(fill="both", expand=True)
@@ -47,8 +47,6 @@ class KindleApp(tkinter.Tk):
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
 
-            self.style.configure("TFrame", background=bg_colour)
-
         self.show_frame(HomePage)
 
     def show_frame(self, page_class,**kwargs):
@@ -56,6 +54,26 @@ class KindleApp(tkinter.Tk):
         if hasattr(page_class,'on_show'):
             frame.on_show(**kwargs)
         frame.tkraise()
+
+    def apply_theme(self):
+        bg = self.theme.background
+        self.configure(bg=bg)
+
+        self.style.configure('.', background=bg, font=self.theme.body_font)
+        self.style.configure('TFrame', background=bg)
+        self.style.configure('TLabel', background=bg, font=self.theme.body_font)
+        self.style.configure('Custom.TLabel', background=bg, font=self.theme.header_font)
+        self.style.configure('TButton', font=self.theme.body_font)
+        self.style.configure('TEntry', font=self.theme.body_font)
+
+        self._recolour_widgets(self,bg)
+
+    def _recolour_widgets(self,widget,bg):
+        if isinstance(widget, (tk.Text, tk.Button)):
+            widget.configure(background=bg)
+
+        for child in widget.winfo_children():
+            self._recolour_widgets(child,bg)
 
 class HomePage(ttk.Frame):
     def __init__(self, parent, controller):
@@ -75,10 +93,6 @@ class HomePage(ttk.Frame):
         for t, page in buttons:
             ttk.Button(self, text=str(t), width=20,
                        command=lambda p=page: controller.show_frame(p)).pack(pady=8,padx=50)
-
-            self.style.configure("TButton",
-                            background=bg_colour,
-                            font=current_font,)
 
 class SearchBookPage(ttk.Frame):
     def __init__(self, parent, controller):
@@ -113,7 +127,6 @@ class SearchBookPage(ttk.Frame):
 
         store_book(id,title,author,book_text)
         self.status_label.config(text=f"Book for {title} downloaded")
-        ''', fg='green', font=current_font, width=50'''
 
 
     def search_book(self):
@@ -215,9 +228,9 @@ class ReadingPage(ttk.Frame):
             text_frame,
             wrap='word',
             yscrollcommand=scrollbar.set,
-            bg=bg_colour,
+            bg=controller.theme.background,
             relief='sunken',
-            font=current_font,
+            font=controller.theme.body_font,
         )
         self.text_widget.pack(side='left',fill='both',expand=True,padx=10,pady=10)
         scrollbar.config(command=self.text_widget.yview)
@@ -290,9 +303,9 @@ class DictionaryPage(ttk.Frame):
             self.result_frame,
             wrap='word',
             yscrollcommand=scrollbar.set,
-            bg=bg_colour,
+            bg=controller.theme.background,
             relief='sunken',
-            font=(current_font, 10)
+            font=(controller.theme.body_font, 10)
         )
         self.result_text.pack(side='left',fill='both',expand=True,padx=10,pady=10)
         scrollbar.config(command=self.result_text.yview)
@@ -414,34 +427,28 @@ class ThemesPage(ttk.Frame):
             ttk.Button(self, text=str(b), width=20,
                        command=lambda p=page: controller.show_frame(p)).pack(pady=8,padx=50)
 
-            self.style.configure("TButton",
-                                 background=bg_colour,
-                                 font=current_font, )
-
 class FontFrame(ttk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.controller = controller
-        self.style = ttk.Style()
 
-        self.l = (ttk.Label(self, text='Changing Font...', style='Custom.TLabel'))
-        self.l.pack(pady=20)
+        ttk.Label(self, text='Changing Font...', style='Custom.TLabel').pack(pady=20)
         HomeButton(self, self.controller).place(x=20, y=20)
 
         font_buttons = [
             ("Times New Roman", 'Times New Roman'),
-            ("Ariel", 'Ariel'),
+            ("Arial", 'Arial'),
             ("Courier", 'Courier'),
-            ("Comic Sans", 'Comic Sans'),
+            ("Comic Sans", 'Comic Sans MS'),
             ("Sans Serif", 'Sans Serif'),
         ]
 
-        for t, n_font in font_buttons:
-            full_font = tkFont.Font(family=n_font, size=10, weight='bold')
-            b = tk.Button(self, text=str(t), width=20, font=full_font)
-            b.pack(pady=8, padx=50)
-            b.config(command=lambda f=full_font: self.change_font(f))
-
+        for label, family in font_buttons:
+            full_font = tkFont.Font(family=family, size=10, weight='bold')
+            button = tk.Button(self, text=str(label), width=20, font=full_font)
+            button.config(command=lambda f=family: controller.theme.set_font(f))
+            button.pack(pady=8, padx=50)
+    '''
     def change_font(self, new_font):
         current_font = new_font
         print(new_font)
@@ -451,6 +458,8 @@ class FontFrame(ttk.Frame):
         self.style.configure('TButton',font=new_font)
         self.style.configure('TCombobox',font=new_font)
         self.style.configure('TEntry',font=new_font)
+        
+        '''
 
 class BackgroundFrame(ttk.Frame):
     def __init__(self, parent, controller):
@@ -460,41 +469,21 @@ class BackgroundFrame(ttk.Frame):
         ttk.Label(self, text='Changing Background...', style='Custom.TLabel').pack(pady=20)
         HomeButton(self, self.controller).place(x=20, y=20)
 
-        self.style = ttk.Style()
-
-
         bg_buttons = [
             ('White', 'white'),
             ('Paper', '#f2e9dc'),
             ('Purple', 'purple')
         ]
 
-        for c, b_but in bg_buttons:
-            b = tk.Button(self, text=str(c), width=20, background=b_but)
-            b.pack(pady=8, padx=50)
-            b.config(command=lambda b=b_but: self.change_bg(b))
-
+        for label, colour in bg_buttons:
+            button = tk.Button(self, text=str(label), width=20, background=colour)
+            button.config(command=lambda c=colour: controller.theme.set_background(c))
+            button.pack(pady=8, padx=50)
+    '''
     def change_bg(self,new_bg_colour):
         bg_colour = new_bg_colour
 
         self.style.configure('TFrame',background=new_bg_colour)
         self.style.configure('Custom.TLabel',background=new_bg_colour)
-        #self.style.configure(self.l.configure,background=new_bg_colour)
         self.style.configure('TCombobox',background=new_bg_colour)
-
-
-
-'''
-    def all_children(self,window=None,finlist=None):
-        if not window:
-            window = self.master
-
-        finlist = finlist or []
-
-        children = window.winfo_children()
-        for item in children:
-            print(item)
-            finlist.append(item)
-            self.all_children(item, finlist)
-        
-        '''
+    '''

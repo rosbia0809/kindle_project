@@ -4,8 +4,6 @@ from manipulating_database import get_recent_words, get_all_words
 
 HEADER_SIZE = 20
 HOME_COLOUR = 'brown'
-bg_colour= '#f2e9dc'
-current_font = 'Ariel'
 
 def clean_word(text):
     word = ''.join([char for char in text if char not in string.punctuation])
