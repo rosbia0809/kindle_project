@@ -33,7 +33,7 @@ class KindleApp(tkinter.Tk):
 
         self.theme.add_listener(self.apply_theme)
         self.style = ttk.Style()
-        self.style.theme_use('clam')
+        self.theme.apply_to(self.style)
 
         container = ttk.Frame(self)
         container.pack(fill="both", expand=True)

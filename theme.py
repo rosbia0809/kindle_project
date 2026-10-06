@@ -1,5 +1,6 @@
 import tkinter.font as tkFont
 import json
+from tkinter import ttk
 
 THEME_PATH = 'theme.json'
 DEFAULT_FONT = 'Arial'
@@ -60,3 +61,7 @@ class Theme:
     def save(self, path='theme.json'):
         with open(path, 'w') as file:
             json.dump({'background': self.background, 'font': self.font}, file)
+
+    def apply_to(self):
+        self.set_background(self.background)
+        self.set_font(self.font)
