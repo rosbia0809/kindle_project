@@ -1,30 +1,41 @@
 import tkinter.font as tkFont
-import tkinter as tk
+import json
 
-THEME_PATH = 'theme.txt'
+THEME_PATH = 'theme.json'
+DEFAULT_FONT = 'Arial'
+DEFAULT_BACKGROUND = '#f2e9dc'
 
 class Theme:
     def __init__(self,
                  path=THEME_PATH
                  ):
         self.path = path
-        self.background = '#f2e9dc'
-        self.body_font = tkFont.Font(family='Arial',size=12,weight='bold')
-        self.header_font = tkFont.Font(family='Arial',size=20,weight='bold')
+        self.background = DEFAULT_BACKGROUND
+        self.font = DEFAULT_FONT
+        self.body_font = tkFont.Font(family=self.font,size=12,weight='bold')
+        self.header_font = tkFont.Font(family=self.font,size=20,weight='bold')
         self._listeners = []
         self.load()
 
-    def load(self, path='theme.txt'):
+        print(self.background)
+        print(self.font)
+
+
+    def load(self, path='theme.json'):
         try:
             with open(path, 'r') as file:
-                lines = file.readlines()
-                temp_family = lines[0].strip()
-                temp_background = lines[1].strip()
+                t_data = file.readline()
+                data = json.loads(t_data)
+
+                self.background = data['background']
+                self.font = data['font']
+                self.set_font(self.font)
+                self.set_background(self.background)
+
+                print(data)
+
         except (FileNotFoundError):
             return
-
-        self.background = temp_background
-        self.body_font.configure(family=temp_family)
 
     def add_listener(self, call_listener):
         self._listeners.append(call_listener)
@@ -38,13 +49,14 @@ class Theme:
         self.background = colour
         self._notify()
 
+        self.save()
+
     def _notify(self):
         for call_listener in self._listeners:
             call_listener()
 
         self.save()
 
-    def save(self, path='theme.txt'):
+    def save(self, path='theme.json'):
         with open(path, 'w') as file:
-            file.write(self.body_font.actual('family') + '\n')
-            file.write(self.background + '\n')
+            json.dump({'background': self.background, 'font': self.font}, file)

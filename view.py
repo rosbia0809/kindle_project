@@ -31,7 +31,6 @@ class KindleApp(tkinter.Tk):
         self.geometry("800x600")
         self.theme = Theme()
 
-        self.theme.load()
         self.theme.add_listener(self.apply_theme)
         self.style = ttk.Style()
         self.style.theme_use('clam')
