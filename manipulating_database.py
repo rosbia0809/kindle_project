@@ -1,6 +1,6 @@
 import sqlalchemy
 from sqlalchemy import orm
-from kindle_database import Base, Books, Word, Bookmark, Lookup
+from kindle_database import Base, Books, Word, Bookmark, Lookup, Definition
 from scraping_data import get_book, get_gutenberg_details, get_word_definitions, NoDefinition
 from datetime import datetime, timedelta
 
@@ -37,9 +37,45 @@ def get_all_books():
 
 def store_word(u_def, u_w:str,book_id: int):
     with orm.Session(engine) as session:
-        for defi in u_def:
-            exists = session.query(Word).filter_by(word=str(u_w), meaning=defi).first()
+        try:
+            word_exists = session.query(Word).filter_by(
+            word=str(u_w),
+            ).first()
 
+            if word_exists is None:
+                word_exists = Word(
+                    word=str(u_w),
+                )
+                session.add(word_exists)
+                session.flush()
+
+            for defi in u_def:
+                def_exists = session.query(Definition).filter_by(
+                    word_id=word_exists.word_id,
+                    meaning=defi,
+                ).first()
+
+                if def_exists is None:
+                    new_definition = Definition(
+                        meaning=defi,
+                        word=word_exists
+                    )
+                    session.add(new_definition)
+
+            new_lookup = Lookup(
+                word=word_exists,
+                book_id=book_id,
+            )
+
+            session.add(new_lookup)
+
+
+            session.commit()
+
+        except Exception:
+            session.rollback()
+            raise
+        '''
             if exists:
                 w = exists
             else:
@@ -58,7 +94,7 @@ def store_word(u_def, u_w:str,book_id: int):
             )
             session.add(lookup)
 
-        session.commit()
+        session.commit()'''
 
 def get_latest_bookmark(book_id: int):
     with orm.Session(engine) as session:
@@ -88,6 +124,7 @@ def get_recent_words():
     with orm.Session(engine) as session:
         recent_words = (
             session.query(Word)
+            .options(orm.selectinload(Word.definitions))
             .join(Lookup)
             .filter(Lookup.time_stamp >= cutoff)
             .distinct()
@@ -96,8 +133,8 @@ def get_recent_words():
     return recent_words
 
 def get_all_words():
-    with orm.Session(engine) as session:
-        all_word = session.query(Word).all()
+    with (orm.Session(engine) as session):
+        all_word = session.query(Word).options(orm.selectinload(Word.definitions)).all()
     return all_word
 
 # Make more for the validation i.e. if get ids returns none do something about that

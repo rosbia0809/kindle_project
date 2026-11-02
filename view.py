@@ -33,7 +33,7 @@ class KindleApp(tkinter.Tk):
 
         self.theme.add_listener(self.apply_theme)
         self.style = ttk.Style()
-        self.theme.apply_to(self.style)
+        self.theme.apply_to()
 
         container = ttk.Frame(self)
         container.pack(fill="both", expand=True)
@@ -51,7 +51,7 @@ class KindleApp(tkinter.Tk):
 
     def show_frame(self, page_class,**kwargs):
         frame = self.frames[page_class]
-        if hasattr(page_class,'on_show'):
+        if hasattr(frame,'on_show'):
             frame.on_show(**kwargs)
         frame.tkraise()
 
@@ -329,14 +329,29 @@ class DictionaryPage(ttk.Frame):
 
         try:
             definitions = get_word_definitions(word)
-            store_word(definitions,word, self.current_book_id)
+            store_word(
+                definitions,
+                word,
+                self.current_book_id
+            )
 
-            for i in range(len(definitions)):
-                self.result_text.insert('end', f'{i + 1} - {definitions[i]}\n')
+            for i, definition in enumerate(definitions, start=1):
+                self.result_text.insert(
+                    "end",
+                    f"{i} - {definition}\n",
+                )
 
         except NoDefinition:
-            self.result_text.insert('1.0', f'Error - No definition for {word} found')
+            self.result_text.insert(
+                "end",
+                f'Error - No definition for {word} found')
             return
+
+            '''
+            for i in range(len(definitions)):
+                self.result_text.insert('end', f'{i + 1} - {definitions[i]}\n')
+            '''
+
 
 class WordTesterPage(ttk.Frame):
     def __init__(self, parent, controller):
@@ -390,11 +405,10 @@ class WordTesterPage(ttk.Frame):
         for i in range(len(self.option_buttons)):
             b = self.option_buttons[i]
             b.update_idletasks()
-            width=b.winfo_width()
+            #width=b.winfo_width()
             b.config(
                 text=question_details[0][i],
                 state='normal',
-                wraplength=width,
                 command=lambda o=question_details[0][i]: self.check_option(o)
             )
 

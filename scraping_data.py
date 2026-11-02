@@ -2,15 +2,42 @@ import gutenbergpy.textget as g_tg # for get_book
 import requests
 from bs4 import BeautifulSoup
 from thefuzz import fuzz
+import re
 import json
 
 class NoDefinition(Exception):
     pass
 
 def get_word_definitions(search):
-    dict = f'https://api.dictionaryapi.dev/api/v2/entries/en/{search}'
+    url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{search}"
 
-    page = requests.get(dict)
+    response = requests.get(url, timeout=10)
+
+    if response.status_code != 200:
+        raise NoDefinition
+
+    data = response.json()
+
+    if isinstance(data, dict) and "title" in data:
+        raise NoDefinition
+
+    definitions = []
+
+    for word_data in data:
+        for meaning in word_data.get("meanings", []):
+            for definition_data in meaning.get("definitions", []):
+                definition = definition_data.get("definition")
+
+                if definition:
+                    definitions.append(definition)
+
+    if not definitions:
+        raise NoDefinition
+
+    return definitions
+
+    '''
+    page = requests.get(url)
     soup = BeautifulSoup(page.content, 'html.parser')
 
     definitions = []
@@ -25,8 +52,7 @@ def get_word_definitions(search):
                 for meaning in word['meanings']:
                     first_atr = meaning['definitions'][0]
                     definitions.append(first_atr['definition'])
-
-    return definitions
+    '''
 
 def get_gutenberg_details(search):
 
@@ -57,6 +83,23 @@ def get_gutenberg_details(search):
         found = False
         count = 0
 
+    while not found and count < len(m_results):
+        item = m_results[count]
+        href = item.get('href',"")
+
+        match = re.search(r"/ebooks/(\d+)",href)
+
+        if match:
+            g_id = match.group(1)
+            found = True
+
+        else:
+            count = count + 1
+
+    if not found:
+        return None
+
+    '''
         while not found:
             item = m_results[count]
 
@@ -67,8 +110,9 @@ def get_gutenberg_details(search):
                 found = True
             else:
                 count = count + 1
+    '''
 
-        return t_results.text, a_results.text, int(g_id), scr
+    return t_results.text, a_results.text, int(g_id), scr
     # get this to work in the view - show the first option, if the scr is less than 60 and then only go to this if the scr is more than 10
 
 

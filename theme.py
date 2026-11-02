@@ -13,8 +13,17 @@ class Theme:
         self.path = path
         self.background = DEFAULT_BACKGROUND
         self.font = DEFAULT_FONT
-        self.body_font = tkFont.Font(family=self.font,size=12,weight='bold')
-        self.header_font = tkFont.Font(family=self.font,size=20,weight='bold')
+
+        self.body_font = tkFont.Font(
+            family=self.font,
+            size=12,
+            weight='bold'
+        )
+        self.header_font = tkFont.Font(
+            family=self.font,
+            size=20,
+            weight='bold'
+        )
         self._listeners = []
         self.load()
 
@@ -25,15 +34,14 @@ class Theme:
     def load(self, path='theme.json'):
         try:
             with open(path, 'r') as file:
-                t_data = file.readline()
-                data = json.loads(t_data)
+                data = json.load(file)
 
-                self.background = data['background']
-                self.font = data['font']
-                self.set_font(self.font)
-                self.set_background(self.background)
+            self.background = data['background']
+            self.font = data['font']
+            self.set_font(self.font)
+            self.set_background(self.background)
 
-                print(data)
+            print(data)
 
         except (FileNotFoundError):
             return
@@ -42,6 +50,7 @@ class Theme:
         self._listeners.append(call_listener)
 
     def set_font(self, family):
+        self.font = family
         self.body_font.configure(family=family)
         self.header_font.configure(family=family)
         self._notify()
@@ -49,8 +58,6 @@ class Theme:
     def set_background(self, colour):
         self.background = colour
         self._notify()
-
-        self.save()
 
     def _notify(self):
         for call_listener in self._listeners:
@@ -60,7 +67,10 @@ class Theme:
 
     def save(self, path='theme.json'):
         with open(path, 'w') as file:
-            json.dump({'background': self.background, 'font': self.font}, file)
+            json.dump({
+                'background': self.background,
+                'font': self.font
+            }, file)
 
     def apply_to(self):
         self.set_background(self.background)
