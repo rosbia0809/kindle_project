@@ -1,9 +1,8 @@
 import tkinter.ttk as ttk
 import tkinter.messagebox
-import tkinter.font as tkFont
 import tkinter as tk
 
-from other_controls import HEADER_SIZE, HOME_COLOUR, new_question, check_answer, clean_word
+from other_controls import HOME_COLOUR, new_question, check_answer, clean_word
 from theme import Theme
 from scraping_data import get_book, get_gutenberg_details, get_word_definitions, NoDefinition
 from manipulating_database import get_latest_bookmark, add_bookmark, store_word, check_book_duplicate, store_book, \
@@ -50,12 +49,14 @@ class KindleApp(tkinter.Tk):
         self.show_frame(HomePage)
 
     def show_frame(self, page_class,**kwargs):
+        '''Used to display the requested frames when respective buttons are pressed'''
         frame = self.frames[page_class]
         if hasattr(frame,'on_show'):
             frame.on_show(**kwargs)
         frame.tkraise()
 
     def apply_theme(self):
+        '''Changed the themes as requested by the user'''
         bg = self.theme.background
         self.configure(bg=bg)
 
@@ -69,6 +70,7 @@ class KindleApp(tkinter.Tk):
         self._recolour_widgets(self,bg)
 
     def _recolour_widgets(self,widget,bg):
+        '''Changes the colour of each widget'''
         if isinstance(widget, (tk.Text, tk.Button)):
             widget.configure(background=bg)
 
@@ -76,6 +78,7 @@ class KindleApp(tkinter.Tk):
             self._recolour_widgets(child,bg)
 
 class HomePage(ttk.Frame):
+    '''The opening page, which has routes to all other pages'''
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.style = ttk.Style()
@@ -95,6 +98,7 @@ class HomePage(ttk.Frame):
                        command=lambda p=page: controller.show_frame(p)).pack(pady=8,padx=50)
 
 class SearchBookPage(ttk.Frame):
+    '''The page where the user is able to search for books, downloading them'''
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.controller = controller
@@ -113,23 +117,15 @@ class SearchBookPage(ttk.Frame):
         HomeButton(self,controller).place(x=20,y=20)
 
     def download_book(self,title, author, id):
+        '''Downloads a book by calling controls'''
         book_text=get_book(id)
-        '''
-        try:
-            book_text = get_book(id)
-        except Exception as e:
-            #find what exception this is and rename
-            print(e)
-            self.status_label.config(text=f"{title} could not be downloaded", fg='red', font=font, width=50)
-            return
-        '''
-        # Do i need this?
 
         store_book(id,title,author,book_text)
         self.status_label.config(text=f"Book for {title} downloaded")
 
 
     def search_book(self):
+        '''Searches for book by calling controls'''
         name = self.entry.get().strip()
 
         if not name:
@@ -157,7 +153,6 @@ class SearchBookPage(ttk.Frame):
 
         if exists:
             self.status_label.config(text=f"Book for {g_title} already downloaded")
-            ''', fg='black', font=current_font, width=50'''
             return
 
         response = tkinter.messagebox.askyesno(title='Your book choice', message=f'Match level is {g_scr} out of 100 \n\nDo you want to download {g_title}')
@@ -165,9 +160,9 @@ class SearchBookPage(ttk.Frame):
             self.download_book(g_title, g_author, g_id)
         else:
             self.status_label.config(text=f"No book downloaded")
-            ''', fg='black', font=current_font, width=50'''
 
 class ReadBookPage(ttk.Frame):
+    '''The page where a user can select which book to read'''
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.controller = controller
@@ -180,6 +175,7 @@ class ReadBookPage(ttk.Frame):
         HomeButton(self,self.controller).place(x=20,y=20)
 
     def on_show(self):
+        '''Lists all the possible books to read with them as buttons to direct to a reading page'''
         for widget in self.list_frame.winfo_children():
             widget.destroy()
 
@@ -198,6 +194,7 @@ class ReadBookPage(ttk.Frame):
             ).pack(pady=5)
 
 class ReadingPage(ttk.Frame):
+    '''The page where the user can read the book that they have requested'''
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.controller = controller
@@ -239,6 +236,7 @@ class ReadingPage(ttk.Frame):
         self.text_widget.bind("<Double-Button-1>",self.look_up_selected_word)
 
     def on_show(self, book_id=None):
+        '''Displays the book to the user'''
         if book_id is None:
             return
         self.current_book_id = book_id
@@ -264,6 +262,8 @@ class ReadingPage(ttk.Frame):
             tkinter.messagebox.showinfo('Bookmarked','Your place has been saved')
 
     def look_up_selected_word(self,event):
+        '''Looks up the word that the user has selected in the dictionary;
+        this is done via a double click of the word on the reading page'''
         self.add_new_bookmark(True)
         try:
             not_clean = self.text_widget.get('insert wordstart', 'insert wordend')
@@ -277,6 +277,7 @@ class ReadingPage(ttk.Frame):
         self.controller.show_frame(DictionaryPage, word=word, book_id=self.current_book_id)
 
 class DictionaryPage(ttk.Frame):
+    '''The page where the user can search up words in a dictionary'''
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.controller = controller
@@ -313,6 +314,7 @@ class DictionaryPage(ttk.Frame):
         HomeButton(self,self.controller).place(x=20,y=20)
 
     def on_show(self, book_id=None, word=None):
+        '''Displays the dictionary to the user'''
         self.current_book_id = book_id
         if word:
             self.entry.delete(0, "end")
@@ -320,6 +322,8 @@ class DictionaryPage(ttk.Frame):
             self.search_word()
 
     def search_word(self):
+        '''Searches the word in the dictionary via controls;
+        it then displays the results to the user'''
         self.result_text.delete('1.0', "end")
 
         word = self.entry.get().strip().lower()
@@ -347,13 +351,9 @@ class DictionaryPage(ttk.Frame):
                 f'Error - No definition for {word} found')
             return
 
-            '''
-            for i in range(len(definitions)):
-                self.result_text.insert('end', f'{i + 1} - {definitions[i]}\n')
-            '''
-
-
 class WordTesterPage(ttk.Frame):
+    '''The page where the user can test their knowledge of words that they have searched up;
+    this page has a question game about word definitions'''
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.controller = controller
@@ -382,9 +382,11 @@ class WordTesterPage(ttk.Frame):
         HomeButton(self, self.controller).place(x=20, y=20)
 
     def on_show(self):
+        '''Displays the question to the user'''
         self.next_question()
 
     def next_question(self):
+        '''Generates a new question for the user via other controls'''
         self.feedback_label.config(text='')
 
         question_details = new_question()
@@ -413,6 +415,8 @@ class WordTesterPage(ttk.Frame):
             )
 
     def check_option(self, option):
+        '''Checks to see whether the user has entered the correct answer;
+        it displays the result to the user'''
         result = check_answer(option, self.correct_answer)
 
         if result:
@@ -423,6 +427,7 @@ class WordTesterPage(ttk.Frame):
             """, fg='red'"""
 
 class ThemesPage(ttk.Frame):
+    '''The page where the user can see the themes and change them'''
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.controller = controller
@@ -438,10 +443,11 @@ class ThemesPage(ttk.Frame):
         ]
         
         for b, page in theme_options:
-            ttk.Button(self, text=str(b), width=20,
+            ttk.Button(self, text=str(b), width=40,
                        command=lambda p=page: controller.show_frame(p)).pack(pady=8,padx=50)
 
 class FontFrame(ttk.Frame):
+    '''The frame designated to changing the fonts'''
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.controller = controller
@@ -457,25 +463,23 @@ class FontFrame(ttk.Frame):
             ("Sans Serif", 'Sans Serif'),
         ]
 
-        for label, family in font_buttons:
-            full_font = tkFont.Font(family=family, size=10, weight='bold')
-            button = tk.Button(self, text=str(label), width=20, font=full_font)
-            button.config(command=lambda f=family: controller.theme.set_font(f))
-            button.pack(pady=8, padx=50)
-    '''
-    def change_font(self, new_font):
-        current_font = new_font
-        print(new_font)
-
-        self.style.configure('TFrame',font=new_font)
-        self.style.configure('TLabel',font=new_font)
-        self.style.configure('TButton',font=new_font)
-        self.style.configure('TCombobox',font=new_font)
-        self.style.configure('TEntry',font=new_font)
-        
-        '''
+        for i, (label, family) in enumerate(font_buttons):
+            style_name = f'Font{i}.TButton'
+            self.controller.style.configure(
+                style_name,
+                font=(family,10,'bold')
+                )
+            button = ttk.Button(
+                self,
+                text=label,
+                width=20,
+                style=style_name,
+                command=lambda f=family: controller.theme.set_font(f)
+            )
+            button.pack(pady=8,padx=50)
 
 class BackgroundFrame(ttk.Frame):
+    '''The frame designated to changing the background colours'''
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.controller = controller
@@ -489,15 +493,22 @@ class BackgroundFrame(ttk.Frame):
             ('Purple', 'purple')
         ]
 
-        for label, colour in bg_buttons:
-            button = tk.Button(self, text=str(label), width=20, background=colour)
-            button.config(command=lambda c=colour: controller.theme.set_background(c))
-            button.pack(pady=8, padx=50)
-    '''
-    def change_bg(self,new_bg_colour):
-        bg_colour = new_bg_colour
+        for i, (label, colour) in enumerate(bg_buttons):
+            style_name = f'Background{i}.TButton'
 
-        self.style.configure('TFrame',background=new_bg_colour)
-        self.style.configure('Custom.TLabel',background=new_bg_colour)
-        self.style.configure('TCombobox',background=new_bg_colour)
-    '''
+            self.controller.style.configure(
+                style_name,
+                background=colour,
+                foreground='black',
+                font=('Arial', 10, 'bold')
+            )
+
+            button = ttk.Button(
+                self,
+                text=label,
+                width=20,
+                style=style_name,
+                command=lambda c=colour: controller.theme.set_background(c)
+            )
+
+            button.pack(pady=8, padx=50)
