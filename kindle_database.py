@@ -136,5 +136,5 @@ class Bookmark(Base):
 
     book: orm.Mapped["Books"] = orm.relationship(
         back_populates="bookmarks",
-        default=None,
+        init=False,
     )

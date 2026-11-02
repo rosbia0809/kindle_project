@@ -110,10 +110,10 @@ def get_latest_bookmark(book_id: int):
         else:
             return None
 
-def add_bookmark(book_id: int, position: float):
+def add_bookmark(c_book_id, position: float):
     with orm.Session(engine) as session:
         bookmark = Bookmark(
-            book_id=book_id,
+            book_id=c_book_id,
             position=position,
         )
         session.add(bookmark)

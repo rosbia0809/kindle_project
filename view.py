@@ -107,7 +107,7 @@ class SearchBookPage(ttk.Frame):
 
         self.entry = ttk.Entry(self, width=40)
         self.entry.pack(pady=20)
-
+        self.entry.bind('<Return>', self.search_book)
         # this label will show whether the book has been found in Gutenberg Project or not
         self.status_label = ttk.Label(self, text='')
         self.status_label.pack(pady=20)
@@ -124,7 +124,7 @@ class SearchBookPage(ttk.Frame):
         self.status_label.config(text=f"Book for {title} downloaded")
 
 
-    def search_book(self):
+    def search_book(self, event=None):
         '''Searches for book by calling controls'''
         name = self.entry.get().strip()
 
@@ -253,9 +253,8 @@ class ReadingPage(ttk.Frame):
             self.text_widget.yview_moveto(last_bookmark)
 
     def add_new_bookmark(self,dict=False):
-        ''' This function adds a new bookmark
-        the dict variable is used to identify whether the user wanted to add a bookmark
-        if it is simply due to the use of the dictionary then a message box won't be used'''
+        '''Saves the user's current reading position
+        If called by the dictionary, no message is displayed'''
         position = self.text_widget.yview()[0]
         add_bookmark(self.current_book_id, position)
         if not dict:
@@ -269,7 +268,7 @@ class ReadingPage(ttk.Frame):
             not_clean = self.text_widget.get('insert wordstart', 'insert wordend')
             word = clean_word(not_clean)
         except Exception as e:
-            '''figure out what TclError is in tkk'''
+            #figure out what TclError is in tkk
             return
 
         if not word:
@@ -287,6 +286,7 @@ class DictionaryPage(ttk.Frame):
 
         self.entry = ttk.Entry(self, width=50)
         self.entry.pack(pady=10)
+        self.entry.bind('<Return>',self.search_word)
 
         ttk.Button(
             self,
@@ -321,7 +321,7 @@ class DictionaryPage(ttk.Frame):
             self.entry.insert(0, word)
             self.search_word()
 
-    def search_word(self):
+    def search_word(self, event=None):
         '''Searches the word in the dictionary via controls;
         it then displays the results to the user'''
         self.result_text.delete('1.0', "end")

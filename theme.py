@@ -27,9 +27,6 @@ class Theme:
         self._listeners = []
         self.load()
 
-        print(self.background)
-        print(self.font)
-
 
     def load(self, path='theme.json'):
         try:
@@ -40,8 +37,6 @@ class Theme:
             self.font = data['font']
             self.set_font(self.font)
             self.set_background(self.background)
-
-            print(data)
 
         except (FileNotFoundError):
             return
