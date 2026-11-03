@@ -146,7 +146,6 @@ def add_correct(word_def):
         word_tested = session.query(WordStats).filter_by(
             word_id=word_data.word_id,
         ).first()
-        print(word_tested)
 
         if word_tested is None:
             word_tested = WordStats(
@@ -157,6 +156,7 @@ def add_correct(word_def):
             session.commit()
         else:
             word_tested.times_correct += 1
+        print(word_tested)
 
 def add_incorrect(word_def):
     with orm.Session(engine) as session:
@@ -168,7 +168,6 @@ def add_incorrect(word_def):
         word_tested = session.query(WordStats).filter_by(
             word_id=word_data.word_id,
         ).first()
-        print(word_tested)
 
         if word_tested is None:
             word_tested = WordStats(
@@ -179,5 +178,6 @@ def add_incorrect(word_def):
             session.commit()
         else:
             word_tested.times_incorrect += 1
+        print(word_tested)
 
 # Make more for the validation i.e. if get ids returns none do something about that

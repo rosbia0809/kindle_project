@@ -365,7 +365,16 @@ class WordTesterPage(ttk.Frame):
 
         self.option_buttons = []
         for i in range(4):
-            b = ttk.Button(self, text='', width=50)
+            b = tk.Button(
+                self,
+                text='',
+                width=50,
+                wraplength=400,
+                justify=tk.CENTER,
+                font=controller.theme.body_font,
+            )
+
+            # b = ttk.Button(self, text='',)
             b.pack(pady=5)
             self.option_buttons.append(b)
 
@@ -396,7 +405,7 @@ class WordTesterPage(ttk.Frame):
                 b.config(
                     text='',
                     state='disabled',
-                    command=b.destroy
+                    command=lambda: None,
                 )
             return
 
@@ -440,7 +449,7 @@ class ThemesPage(ttk.Frame):
             ('Change Font', FontFrame),
             ('Change Background Colour', BackgroundFrame)
         ]
-        
+
         for b, page in theme_options:
             ttk.Button(self, text=str(b), width=40,
                        command=lambda p=page: controller.show_frame(p)).pack(pady=8,padx=50)
