@@ -1,6 +1,6 @@
 import sqlalchemy
 from sqlalchemy import orm
-from kindle_database import Base, Books, Word, Bookmark, Lookup, Definition
+from kindle_database import Base, Books, Word, Bookmark, Lookup, Definition, WordStats
 from scraping_data import get_book, get_gutenberg_details, get_word_definitions, NoDefinition
 from datetime import datetime, timedelta
 
@@ -75,26 +75,25 @@ def store_word(u_def, u_w:str,book_id: int):
         except Exception:
             session.rollback()
             raise
-        '''
-            if exists:
-                w = exists
-            else:
-                w = Word(
-                    word=str(u_w),
-                    meaning=str(defi),
-                    lookups=[],
-                )
-                session.add(w)
-                session.commit()
-
-            lookup = Lookup(
-                word_id=w.word_id,
-                book_id=book_id,
-                time_stamp=datetime.now(),
-            )
-            session.add(lookup)
-
-        session.commit()'''
+            #
+            # if exists:
+            #     w = exists
+            # else:
+            #     w = Word(
+            #         word=str(u_w),
+            #         meaning=str(defi),
+            #         lookups=[],
+            #     )
+            #     session.add(w)
+            #     session.commit()
+            #
+            # lookup = Lookup(
+            #     word_id=w.word_id,
+            #     book_id=book_id,
+            #     time_stamp=datetime.now(),
+            # )
+            # session.add(lookup)
+            # session.commit()
 
 def get_latest_bookmark(book_id: int):
     with orm.Session(engine) as session:
@@ -136,5 +135,49 @@ def get_all_words():
     with (orm.Session(engine) as session):
         all_word = session.query(Word).options(orm.selectinload(Word.definitions)).all()
     return all_word
+
+def add_correct(word_def):
+    with orm.Session(engine) as session:
+        word_data = session.query(Definition).filter_by(
+            meaning=str(word_def),
+        ).first()
+        print(word_data.word_id)
+
+        word_tested = session.query(WordStats).filter_by(
+            word_id=word_data.word_id,
+        ).first()
+        print(word_tested)
+
+        if word_tested is None:
+            word_tested = WordStats(
+                word_id=word_data.word_id,
+                times_correct=1,
+            )
+            session.add(word_tested)
+            session.commit()
+        else:
+            word_tested.times_correct += 1
+
+def add_incorrect(word_def):
+    with orm.Session(engine) as session:
+        word_data = session.query(Definition).filter_by(
+            meaning=str(word_def),
+        ).first()
+        print(word_data)
+
+        word_tested = session.query(WordStats).filter_by(
+            word_id=word_data.word_id,
+        ).first()
+        print(word_tested)
+
+        if word_tested is None:
+            word_tested = WordStats(
+                word_id=word_data.word_id,
+                times_incorrect=1,
+            )
+            session.add(word_tested)
+            session.commit()
+        else:
+            word_tested.times_incorrect += 1
 
 # Make more for the validation i.e. if get ids returns none do something about that

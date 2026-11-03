@@ -1,6 +1,6 @@
 import random
 import string
-from manipulating_database import get_recent_words, get_all_words
+from manipulating_database import get_recent_words, get_all_words, add_correct, add_incorrect
 
 HEADER_SIZE = 20
 HOME_COLOUR = 'brown'
@@ -40,32 +40,34 @@ def new_question():
     all_options = other_options + [correct_answer]
     random.shuffle(all_options)
 
-    '''
-    else:
-        correct = random.choice(recents)
-        if correct.definitions:
-            correct_answer = correct.definitions[0].meaning
-        else:
-            correct_answer = 'No definition avaiable'
-        correct_word = correct.word
-
-        other_pool = [
-            w.meaning
-            for w in all_time
-            if w.word != correct_word
-        ]
-        if len(other_pool)<0:
-            return None
-
-        other_options = random.sample(other_pool, 3)
-
-        all_options = other_options + [correct_answer]
-        random.shuffle(all_options)
-    '''
+    #
+    # else:
+    #     correct = random.choice(recents)
+    #     if correct.definitions:
+    #         correct_answer = correct.definitions[0].meaning
+    #     else:
+    #         correct_answer = 'No definition avaiable'
+    #     correct_word = correct.word
+    #
+    #     other_pool = [
+    #         w.meaning
+    #         for w in all_time
+    #         if w.word != correct_word
+    #     ]
+    #     if len(other_pool)<0:
+    #         return None
+    #
+    #     other_options = random.sample(other_pool, 3)
+    #
+    #     all_options = other_options + [correct_answer]
+    #     random.shuffle(all_options)
+    #
     return all_options, correct_word, correct_answer
 
 def check_answer(chosen,correct):
     if chosen == correct:
+        add_correct(correct)
         return True
     else:
+        add_incorrect(correct)
         return False

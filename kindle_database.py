@@ -138,3 +138,24 @@ class Bookmark(Base):
         back_populates="bookmarks",
         init=False,
     )
+
+class WordStats(Base):
+    __tablename__ = "WORD_STATS"
+
+    stats_id: orm.Mapped[int] = orm.mapped_column(
+        primary_key=True,
+        autoincrement=True,
+        init=False,
+    )
+    word_id: orm.Mapped[int] = orm.mapped_column(
+        sqlalchemy.ForeignKey("WORDS.word_id"),
+    )
+    times_correct: orm.Mapped[int] = orm.mapped_column(
+        default=0,
+    )
+    times_incorrect: orm.Mapped[int] = orm.mapped_column(
+        default=0,
+    )
+    last_tested: orm.Mapped[datetime.datetime] = orm.mapped_column(
+        default_factory=datetime.datetime.now,
+    )

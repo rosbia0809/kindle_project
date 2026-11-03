@@ -148,7 +148,6 @@ class SearchBookPage(ttk.Frame):
         # g_title = result[0]
         # g_author = result[1]
         # g_id = result[2]
-
         exists = check_book_duplicate(g_id)
 
         if exists:
