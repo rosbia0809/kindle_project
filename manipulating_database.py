@@ -180,4 +180,11 @@ def add_incorrect(word_def):
             word_tested.times_incorrect += 1
         print(word_tested)
 
+def calc_correct():
+    '''Calculates how many questions the user has gotten correct in the word tester'''
+    with orm.Session(engine) as session:
+        all_words = session.query(WordStats).all()
+
+        print (all_words)
+
 # Make more for the validation i.e. if get ids returns none do something about that

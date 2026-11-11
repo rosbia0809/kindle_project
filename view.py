@@ -40,7 +40,7 @@ class KindleApp(tkinter.Tk):
         container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
-        for F in [HomePage,SearchBookPage,ReadBookPage,ReadingPage,DictionaryPage,WordTesterPage,ThemesPage,FontFrame,BackgroundFrame]:
+        for F in [HomePage,SearchBookPage,ReadBookPage,ReadingPage,DictionaryPage,WordTesterPage,ThemesPage,FontFrame,BackgroundFrame,StatsPage]:
 
             frame = F(container, self)
             self.frames[F] = frame
@@ -91,6 +91,7 @@ class HomePage(ttk.Frame):
             ["Dictionary", DictionaryPage],
             ["Word Tester", WordTesterPage],
             ["Theme Changer", ThemesPage],
+            ["Check Stats", StatsPage],
         ]
 
         for t, page in buttons:
@@ -520,3 +521,12 @@ class BackgroundFrame(ttk.Frame):
             )
 
             button.pack(pady=8, padx=50)
+
+class StatsPage(ttk.Frame):
+    def __init__(self, parent, controller):
+        super().__init__(parent)
+        self.controller = controller
+        ttk.Label(self, text='Your Stats:', style='Custom.TLabel').pack(pady=20)
+        HomeButton(self, self.controller).place(x=20, y=20)
+
+        ttk.
