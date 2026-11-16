@@ -1,7 +1,5 @@
 import sqlalchemy
 from sqlalchemy import orm, func
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from kindle_database import Base, Books, Word, Bookmark, Lookup, Definition, WordStats
 from datetime import datetime, timedelta
 
@@ -154,10 +152,9 @@ def add_correct(word_def):
                 times_correct=1,
             )
             session.add(word_tested)
-            session.commit()
         else:
             word_tested.times_correct += 1
-        print(word_tested)
+        session.commit()
 
 def add_incorrect(word_def):
     with orm.Session(engine) as session:
@@ -176,17 +173,9 @@ def add_incorrect(word_def):
                 times_incorrect=1,
             )
             session.add(word_tested)
-            session.commit()
         else:
             word_tested.times_incorrect += 1
-        print(word_tested)
-
-def calc_correct():
-    '''Calculates how many questions the user has gotten correct in the word tester'''
-    with orm.Session(engine) as session:
-        all_words = session.query(WordStats).all()
-
-        print (all_words)
+        session.commit()
 
 def get_most_looked_up_words():
     """Searches the database for the most looked up words in the dictionary"""
@@ -220,16 +209,16 @@ def get_test_results():
 
     return correct, incorrect
 
-def get_daily_lookups():
+def get_daily_lookups(n_days=None):
     """Returns the number of lookups being done each day in the last 30 days"""
-    cutoff = datetime.now() - timedelta(days=30)
-
     with orm.Session(engine) as session:
-        lookups = (
-            session.query(Lookup.time_stamp)
-            .filter(Lookup.time_stamp >= cutoff)
-            .all()
-        )
+        query = session.query(Lookup.time_stamp)
+
+        if n_days is not None:
+            cutoff = datetime.now() - timedelta(days=n_days)
+            query = query.filter(Lookup.time_stamp >= cutoff)
+
+        lookups = query.all()
 
     daily_counts = {}
 

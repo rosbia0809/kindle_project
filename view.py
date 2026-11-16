@@ -1,12 +1,15 @@
 import tkinter.ttk as ttk
 import tkinter.messagebox
 import tkinter as tk
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 
 from other_controls import HOME_COLOUR, new_question, check_answer, clean_word
 from theme import Theme
 from scraping_data import get_book, get_gutenberg_details, get_word_definitions, NoDefinition
 from manipulating_database import get_latest_bookmark, add_bookmark, store_word, check_book_duplicate, store_book, \
-    get_books_from_database, get_all_books
+    get_books_from_database, get_all_books, get_most_looked_up_words, get_test_results, get_daily_lookups
 
 class HomeButton(tk.Button):
     '''A home page button that will appear on all pages'''
@@ -529,3 +532,85 @@ class StatsPage(ttk.Frame):
         ttk.Label(self, text='Your Stats:', style='Custom.TLabel').pack(pady=20)
         HomeButton(self, self.controller).place(x=20, y=20)
 
+        self.graph_frame = ttk.Frame(self)
+        self.graph_frame.pack(
+            fill='both',
+            expand=True,
+            padx=10,
+            pady=10,
+        )
+
+    def on_show(self):
+        """Displays statistics to the user"""
+
+        for widget in self.graph_frame.winfo_children():
+            widget.destroy()
+
+        popular_words = get_most_looked_up_words()
+        correct, incorrect = get_test_results()
+        daily_lookups = get_daily_lookups()
+
+        figure = Figure(figsize=(9, 7), dpi=90)
+
+        # Daily Lookups
+        ax1 = figure.add_subplot(221)
+
+        dates = sorted(daily_lookups.keys())
+        counts = [daily_lookups[date] for date in dates]
+
+        if dates:
+            ax1.plot(dates, counts, marker='o', color='blue')
+            ax1.tick_params(axis='y', rotation=45)
+            ax1.tick_params(axis='x', rotation=90)
+            ax1.set_title('Daily Word Lookups')
+            ax1.set_xlabel('Date')
+            ax1.set_ylabel('Number of Lookups')
+        else:
+            ax1.set_title('Daily Word Lookups')
+            ax1.text(0.5,0.5,'No data available',ha='centre', va='center')
+
+        # Most popular words
+        ax2 = figure.add_subplot(222)
+
+        if popular_words:
+            words = [item[0] for item in popular_words]
+            word_counts = [item[1] for item in popular_words]
+
+            ax2.bar(words, word_counts, align='center')
+            ax2.set_title('Most Looked-up Words')
+            ax2.set_xlabel('Word')
+            ax2.set_ylabel('Number of Lookups')
+            ax2.tick_params(axis='y', rotation=45)
+            ax2.tick_params(axis='x', rotation=90)
+        else:
+            ax2.set_title('Most Looked-up Words')
+            ax2.text(0.5,0.5,'No data available',ha='centre', va='center')
+
+        # Word Tester Results
+        ax3 = figure.add_subplot(223)
+
+        if correct + incorrect > 0:
+            ax3.pie(
+                [correct, incorrect],
+                labels=['Correct', 'Incorrect'],
+                autopct=lambda pct: f'{correct + incorrect} %',
+                startangle=90,
+            )
+            ax3.set_title('Word Tester Results')
+        else:
+            ax3.set_title('Word Tester Results')
+            ax3.text(0.5,0.5,'No data available',ha='center', va='center')
+
+        figure.tight_layout()
+
+        canvas = FigureCanvasTkAgg(
+            figure,
+            master=self.graph_frame
+        )
+
+        canvas.draw()
+
+        canvas.get_tk_widget().pack(
+            fill='both',
+            expand=True
+        )
