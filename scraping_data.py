@@ -3,7 +3,6 @@ import requests
 from bs4 import BeautifulSoup
 from thefuzz import fuzz
 import re
-import json
 
 class NoDefinition(Exception):
     pass

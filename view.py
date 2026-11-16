@@ -70,7 +70,7 @@ class KindleApp(tkinter.Tk):
         self._recolour_widgets(self,bg)
 
     def _recolour_widgets(self,widget,bg):
-        '''Changes the colour of each widget'''
+        """Changes the colour of each widget"""
         if isinstance(widget, (tk.Text, tk.Button)):
             widget.configure(background=bg)
 
@@ -78,7 +78,7 @@ class KindleApp(tkinter.Tk):
             self._recolour_widgets(child,bg)
 
 class HomePage(ttk.Frame):
-    '''The opening page, which has routes to all other pages'''
+    """The opening page, which has routes to all other pages"""
     def __init__(self, parent, controller):
         super().__init__(parent)
         self.style = ttk.Style()
@@ -529,4 +529,3 @@ class StatsPage(ttk.Frame):
         ttk.Label(self, text='Your Stats:', style='Custom.TLabel').pack(pady=20)
         HomeButton(self, self.controller).place(x=20, y=20)
 
-        ttk.

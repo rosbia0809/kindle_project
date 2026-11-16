@@ -1,6 +1,5 @@
 import tkinter.font as tkFont
 import json
-from tkinter import ttk
 
 THEME_PATH = 'theme.json'
 DEFAULT_FONT = 'Arial'

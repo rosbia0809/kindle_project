@@ -1,7 +1,8 @@
 import sqlalchemy
-from sqlalchemy import orm
+from sqlalchemy import orm, func
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from kindle_database import Base, Books, Word, Bookmark, Lookup, Definition, WordStats
-from scraping_data import get_book, get_gutenberg_details, get_word_definitions, NoDefinition
 from datetime import datetime, timedelta
 
 engine = sqlalchemy.create_engine('sqlite:///kindle.sqlite')
@@ -186,5 +187,60 @@ def calc_correct():
         all_words = session.query(WordStats).all()
 
         print (all_words)
+
+def get_most_looked_up_words():
+    """Searches the database for the most looked up words in the dictionary"""
+    with orm.Session(engine) as session:
+        results = (
+            session.query(
+                Word.word,
+                func.count(Lookup.lookup_id)
+            )
+            .join(Lookup)
+            .group_by(Word.word)
+            .order_by(func.count(Lookup.lookup_id).desc())
+            .limit(5)
+            .all()
+        )
+
+    return results
+
+def get_test_results():
+    """Returns the number of times that the user has been (in)correct in their word tester"""
+    with orm.Session(engine) as session:
+        all_stats = session.query(WordStats).all()
+
+        correct = sum(
+            word.times_correct for word in all_stats
+        )
+
+        incorrect = sum(
+            word.times_incorrect for word in all_stats
+        )
+
+    return correct, incorrect
+
+def get_daily_lookups():
+    """Returns the number of lookups being done each day in the last 30 days"""
+    cutoff = datetime.now() - timedelta(days=30)
+
+    with orm.Session(engine) as session:
+        lookups = (
+            session.query(Lookup.time_stamp)
+            .filter(Lookup.time_stamp >= cutoff)
+            .all()
+        )
+
+    daily_counts = {}
+
+    for lookup in lookups:
+        day = lookup.time_stamp.date()
+
+        if day not in daily_counts:
+            daily_counts[day] = 0
+
+        daily_counts[day] += 1
+
+    return daily_counts
 
 # Make more for the validation i.e. if get ids returns none do something about that
