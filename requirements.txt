@@ -6,3 +6,4 @@ bs4
 gutenbergpy
 re
 matplotlib
+numpy

@@ -1,5 +1,6 @@
 import random
 import string
+import numpy as np
 from manipulating_database import get_recent_words, get_all_words, add_correct, add_incorrect
 
 HEADER_SIZE = 20
@@ -71,3 +72,7 @@ def check_answer(chosen,correct):
     else:
         add_incorrect(correct)
         return False
+
+def calc_percentages(pct, values):
+    absolute = int(pct / 100. * np.sum(values))
+    return "{:.1f}%\n({:d})".format(pct, absolute)

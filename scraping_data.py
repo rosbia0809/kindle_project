@@ -63,8 +63,9 @@ def get_gutenberg_details(search):
 
     #looking into the content page
     results = soup.find(id="content")
-    #returning all the values that have an href
-    m_results = results.find_all(href = True)
+
+    # returning all the values that have an href
+    m_results = results.find_all(href=True)
 
     try:
         #trying to see if the values in m_results match up to the book

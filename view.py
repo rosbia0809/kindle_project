@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
-from other_controls import HOME_COLOUR, new_question, check_answer, clean_word
+from other_controls import HOME_COLOUR, new_question, check_answer, clean_word, calc_percentages
 from theme import Theme
 from scraping_data import get_book, get_gutenberg_details, get_word_definitions, NoDefinition
 from manipulating_database import get_latest_bookmark, add_bookmark, store_word, check_book_duplicate, store_book, \
@@ -561,13 +561,13 @@ class StatsPage(ttk.Frame):
         if dates:
             ax1.plot(dates, counts, marker='o', color='blue')
             ax1.tick_params(axis='y', rotation=45)
-            ax1.tick_params(axis='x', rotation=90)
+            ax1.tick_params(axis='x', rotation=45)
             ax1.set_title('Daily Word Lookups')
             ax1.set_xlabel('Date')
             ax1.set_ylabel('Number of Lookups')
         else:
             ax1.set_title('Daily Word Lookups')
-            ax1.text(0.5,0.5,'No data available',ha='centre', va='center')
+            ax1.text(0.5,0.5,'No data available',ha='center', va='center')
 
         # Most popular words
         ax2 = figure.add_subplot(222)
@@ -584,16 +584,17 @@ class StatsPage(ttk.Frame):
             ax2.tick_params(axis='x', rotation=90)
         else:
             ax2.set_title('Most Looked-up Words')
-            ax2.text(0.5,0.5,'No data available',ha='centre', va='center')
+            ax2.text(0.5,0.5,'No data available',ha='center', va='center')
 
         # Word Tester Results
         ax3 = figure.add_subplot(223)
 
         if correct + incorrect > 0:
+            y = [correct, incorrect]
             ax3.pie(
                 [correct, incorrect],
                 labels=['Correct', 'Incorrect'],
-                autopct=lambda pct: f'{correct + incorrect} %',
+                autopct=lambda pct: calc_percentages(pct,y),
                 startangle=90,
             )
             ax3.set_title('Word Tester Results')
