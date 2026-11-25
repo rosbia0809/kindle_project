@@ -140,7 +140,6 @@ def add_correct(word_def):
         word_data = session.query(Definition).filter_by(
             meaning=str(word_def),
         ).first()
-        print(word_data.word_id)
 
         word_tested = session.query(WordStats).filter_by(
             word_id=word_data.word_id,
@@ -161,7 +160,6 @@ def add_incorrect(word_def):
         word_data = session.query(Definition).filter_by(
             meaning=str(word_def),
         ).first()
-        print(word_data)
 
         word_tested = session.query(WordStats).filter_by(
             word_id=word_data.word_id,
